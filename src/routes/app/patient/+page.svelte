@@ -13,7 +13,6 @@
 	const upcomingVisits = writable([] as Visit[]);
 	const pastVisits = writable([] as Visit[]);
 	const today = new Date();
-	let dateInputVal:Date|null = null;
 	let dateVal:Date|null = null;
 	let sTimeFrame = "";
 	let interview = "";
@@ -63,11 +62,12 @@
 			alert("Proszę wybrać dzień spotkania");
 			return;
 		} 
+
 		const slot = $selectedRows[0];
 		const visit: Visit = {
 			doctor: slot.doctor,
 			office: slot.office,
-			date: dateToStr(dateVal),
+			date: slot.date,
 			timeFrom: slot.start,
 			timeTo: slot.end,
 			visit_kind: slot.visit_kind, 
@@ -78,6 +78,8 @@
             method: "POST",
             body: JSON.stringify(visit)
         };
+		dateVal = null;
+		handler.invalidate();
         let response = await fetch('/app/patient/visits/create', cfgReq);
 		const resObj = await response.json();
 		if (resObj.success) {
@@ -94,7 +96,7 @@
 					}
 					return visits;
 				});
-				console.log("Updated upcoming visits");
+				//console.log("Updated upcoming visits");
 			} else {
 				alert("New visit object is not returned");
 			}
@@ -167,7 +169,7 @@
 			<label for="interview" class="leading-7 text-sm text-gray-600">Powody wizyty</label>
 			<textarea maxlength="1000" rows="3" placeholder="Opisz w kilku zdaniach swój problem zdrowotny. &#13;&#10; Jakie masz dolegliwości? &#13;&#10; Co potrzebujesz?" value="{interview}" id="interview" name="interview" class="w-full bg-white rounded border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
 			<div class="w-full flex-row align-top items-stretch flow-root mt-5">
-                <DateInput placeholder="Wybierz datę" bind:value={dateInputVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => handler.invalidate()} 
+                <DateInput placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => handler.invalidate()} 
                     class="border border-transparent w-24 rounded-lg bg-white float-left"/>
                 <input readonly={true} value="{sTimeFrame}" class="w-28 ml-5 mt-px border-none h-9 p-1 rounded-s-sm bg-transparent text-black float-left">
                 <button on:click={(_) => submitNewVisit()} class="text-white bg-blue-500 border-0 py-1 px-1 focus:outline-none hover:bg-primary rounded float-right">Składać</button>
@@ -197,8 +199,6 @@
                                             type="checkbox"
                                             name="slot"
                                             on:click={() => {
-												dateVal = dateInputVal;
-												dateInputVal = null;
                                                 handler.getSelected().set([]);
                                                 handler.select(row);
 												sTimeFrame = row.start + " - " + row.end;

@@ -1,10 +1,8 @@
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
+import type { Pool } from '$lib/server/db';
 import type { MyDrUser, Staff, Token } from '$lib/server/mydr';
-import type { UserRegister } from '$lib/server/user';
-import type { PrismaClient } from '@prisma/client';
-import type { User } from '@prisma/client';
-
+import type { User, UserRegister } from '$lib/utils';
 declare global {
 	namespace App {
 		// interface Error {}
@@ -19,7 +17,7 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
-	var prisma: PrismaClient;
+	var dbPool: Pool;
 	var myDrToken: Token;
 	var doctors: Map<number, Staff>;
 }

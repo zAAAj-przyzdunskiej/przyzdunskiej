@@ -23,3 +23,5 @@ prisma/migrations/20240319033619_init/migration.sql
 prisma/migrations/20240319091124_init/migration.sql
 prisma/migrations/20240319094940_init/migration.sql
 prisma/migrations/migration_lock.toml
+pnpm-lock.yaml
+pnpm-lock.yaml

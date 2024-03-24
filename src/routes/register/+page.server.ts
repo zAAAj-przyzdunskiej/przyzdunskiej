@@ -1,8 +1,7 @@
-import { userRegisterSchema, type RegisterUserInput, register, tryRegister, type UserRegister } from '$lib/server/user';
+import { register, tryRegister } from '$lib/server/user';
 import { fail } from "@sveltejs/kit";
 import type { Actions } from './$types';
-import { type User } from '@prisma/client';
-import { checkPesel } from '$lib/utils';
+import { checkPesel, userRegisterSchema, type User } from '$lib/utils';
 import { PUBLIC_INVALID_PESEL } from '$env/static/public';
 
 export async function load({locals, url}) {

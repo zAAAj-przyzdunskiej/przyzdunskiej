@@ -1,7 +1,7 @@
 import { DEFAULT_VISIT_TYPE } from '$env/static/private';
 import { PUBLIC_NO_DECLARATION, PUBLIC_UA_DEACTIVATED, PUBLIC_UNAUTHORIZED } from '$env/static/public';
 import { MyDr, VisitKind, type Visit } from '$lib/server/mydr.js';
-import { getDoctor } from '$lib/server/user.js';
+import { getDoctor, updateUser } from '$lib/server/user.js';
 import { ResultCode } from '$lib/utils.js';
 import { json, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
@@ -42,14 +42,14 @@ export async function POST({ request, locals, cookies }) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
         user.id = null;
         user.active = false;
-        prisma.user.update({data: user, where: {pesel: user.pesel}});
+        updateUser(user);
         locals.message = PUBLIC_UA_DEACTIVATED;
         throw redirect(303, "/app/logout");
     }
     if(!myDrUser.active) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
         user.active = false;
-        prisma.user.update({data: user, where: {pesel: user.pesel}});
+        updateUser(user);
         locals.message = PUBLIC_UA_DEACTIVATED;
         throw redirect(303, "/app/logout");
     }

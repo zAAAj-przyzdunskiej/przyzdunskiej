@@ -1,8 +1,8 @@
 import { error, redirect, type Handle } from '@sveltejs/kit';
-import type { User } from '@prisma/client';
 import { getUserByPesel } from '$lib/server/user';
 import { PUBLIC_NO_DECLARATION, PUBLIC_SERVER_ERROR, PUBLIC_UA_NOTACTIVATED } from '$env/static/public';
 import { verifyJWT } from '$lib/server/token';
+import type { User } from '$lib/utils';
 
 export const handle: Handle = async ({ resolve, event }) => {
     const { url, locals, request, cookies } = event;

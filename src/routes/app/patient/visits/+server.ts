@@ -82,7 +82,7 @@ export async function GET({ locals, url}) {
             }
 
             const doctorObj = await getDoctor(visit.doctor);
-            console.log("getDoctor id=" + visit.doctor + ", return " + (doctorObj ? doctorObj.first_name : "null"));
+            //console.log("getDoctor id=" + visit.doctor + ", return " + (doctorObj ? doctorObj.first_name : "null"));
             const doctorName = doctorObj ? doctorObj.first_name + " " + doctorObj.last_name : "";
             const {patient, doctor, office, visit_type, latest_modification, ...tmp} = visit;
             const retVisit: VisitTime = {doctor: doctorName, ...tmp};

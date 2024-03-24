@@ -1,8 +1,8 @@
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions } from './$types';
-import { userLoginSchema, type LoginUserInput, genToken } from "$lib/server/user";
+import { genToken } from "$lib/server/user";
 import { login } from "$lib/server/user";
-import { type Result } from '$lib/utils';
+import { userLoginSchema, type Result } from '$lib/utils';
 import { JWT_EXPIRES_IN } from "$env/static/private";
 
 
@@ -70,6 +70,6 @@ export const actions: Actions = {
             }
             throw redirect(303, redirectUrl);
         } 
-        console.log("logged in");
+        //console.log("logged in");
     }
 };

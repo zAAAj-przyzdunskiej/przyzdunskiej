@@ -1,6 +1,5 @@
 import {MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD} from '$env/static/private'
-import { type User, type Address } from '@prisma/client';
-import { ResultCode, type Result, removeNulls, buildUrlQueryData } from '$lib/utils';
+import { ResultCode, type Result, removeNulls, buildUrlQueryData, type Address, type User } from '$lib/utils';
 import { boolean, date, number, z } from 'zod';
 
 export interface MyDrUser extends User {
@@ -99,7 +98,7 @@ export class MyDrGetter<T> {
         this._next = null;
     }
     async load():Promise<MyDrGetter<T>> {
-        console.log("Fetching " + this.urlStr + " with headers " + JSON.stringify(this.cfgReq));
+        console.log("Fetching " + this.urlStr);// + " with headers " + JSON.stringify(this.cfgReq));
         let res = await fetch(this.urlStr, this.cfgReq);
         this.status = res.status;
         this.ok = res.ok && res.status >= 200 && res.status < 300 ;
@@ -454,7 +453,7 @@ async function initToken() {
     let resToken = await response.json() as Token;
     resToken.expires_in = Date.now() + resToken.expires_in * 1000;
     globalThis.myDrToken = resToken;
-    console.log("Init token: Bearer: " + resToken.access_token + ", Refresh: " + resToken.refresh_token)
+    console.log("Init token: Bearer: ");// + resToken.access_token + ", Refresh: " + resToken.refresh_token)
 }
 async function refreshToken() {
 
@@ -473,7 +472,7 @@ async function refreshToken() {
         },
         body: buildUrlQueryData(reqBody)
     }
-    console.log("fetching token: " + tokenUrl)
+    //console.log("fetching token: " + tokenUrl)
     let response = await fetch(tokenUrl, cfgReq);
     if (!response.ok) {
         throw new Error("Network response was not OK, http status " + response.status);
@@ -483,7 +482,7 @@ async function refreshToken() {
     resToken.expires_in = resToken.expires_in * 1000 + Date.now(); //convert seconds to miliseconds
 
     globalThis.myDrToken = resToken;  
-    console.log("REFRESH TOKEN: Bearer: " + resToken.access_token + ", Refresh: " + resToken.refresh_token)
+    //console.log("REFRESH TOKEN: Bearer: " + resToken.access_token + ", Refresh: " + resToken.refresh_token)
 }
 
 //adimr52@gmail.com 98112402795

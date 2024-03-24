@@ -3,7 +3,6 @@ import { ResultCode } from "$lib/utils";
 import { z } from "zod";
 import type { Actions } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { prisma } from "$lib/server/prisma";
 import { changePassword } from "$lib/server/user";
 
 const pswChangeSchema = z.object({
