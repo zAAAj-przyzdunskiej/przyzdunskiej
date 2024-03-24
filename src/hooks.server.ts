@@ -1,0 +1,51 @@
+import { error, redirect, type Handle } from '@sveltejs/kit';
+import type { User } from '@prisma/client';
+import { getUserByPesel } from '$lib/server/user';
+import { PUBLIC_NO_DECLARATION, PUBLIC_SERVER_ERROR, PUBLIC_UA_NOTACTIVATED } from '$env/static/public';
+import { verifyJWT } from '$lib/server/token';
+
+export const handle: Handle = async ({ resolve, event }) => {
+    const { url, locals, request, cookies } = event;
+
+    let authToken: string | undefined;
+    if (cookies.get('token')) {
+        authToken = cookies.get('token');
+    } else if (request.headers.get('Authorization')?.startsWith('Bearer ')) {
+        authToken = request.headers.get('Authorization')?.substring(7);
+    }
+    if(authToken) {
+        locals.token = authToken;
+    }
+    if(url.pathname.startsWith('/app')) {
+        if (!authToken) {
+            console.log("No token provided in cookies");
+            //throw error(401, 'Nie jesteś zalogowany. Podaj token aby uzyskać dostęp.');
+            throw redirect(303, "/login?redirectTo=" + url.pathname)
+        }
+        let pesel: string;
+        try {
+            const { sub } = await verifyJWT<{ sub: string }>(authToken);
+            pesel = sub;
+        } catch(error: any) {
+            throw redirect(303, "/login?redirectTo=" + url.pathname)
+        }
+
+        let ua: User|null = null;
+        try {
+            ua = await getUserByPesel(pesel);
+        } catch (err: any) {
+            throw error(500, PUBLIC_SERVER_ERROR);
+        }
+        if(ua == null || !ua.id) {
+            throw error(401, PUBLIC_NO_DECLARATION);
+        } 
+        if(!ua.active) {
+            throw error(401, PUBLIC_UA_NOTACTIVATED);
+        } 
+        
+        locals.user = ua;
+    }
+
+    const response = await resolve(event);
+    return response;
+};

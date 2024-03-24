@@ -8,3 +8,16 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+prisma/migrations/20240302120316_init/migration.sql
+prisma/migrations/20240310054741_init/migration.sql
+prisma/migrations/20240311221137_init/migration.sql
+prisma/migrations/20240311221445_init/migration.sql
+prisma/migrations/20240312021315_init/migration.sql
+prisma/migrations/20240312111205_init/migration.sql
+prisma/migrations/20240313000626_init/migration.sql
+prisma/migrations/20240316053927_init/migration.sql
+prisma/migrations/20240319020801_init/migration.sql
+prisma/migrations/20240319031015_init/migration.sql
+prisma/migrations/20240319033619_init/migration.sql
+prisma/migrations/20240319091124_init/migration.sql
+prisma/migrations/20240319094940_init/migration.sql

@@ -1,0 +1,490 @@
+import {MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD} from '$env/static/private'
+import { type User, type Address } from '@prisma/client';
+import { ResultCode, type Result, removeNulls, buildUrlQueryData } from '$lib/utils';
+import { boolean, date, number, z } from 'zod';
+
+export interface MyDrUser extends User {
+    residence_address?: Address;
+    registration_address?: Address;
+}
+export type Staff = {
+    id?: number,
+    email: string,
+    first_name: string,
+    last_name: string,
+    pesel?: string,
+    telephone?: string,
+    username?: string,
+    profession_code?: string,
+    pwz?: string
+}
+export type QResponse<T> = {
+    current_page?: number,
+    last_page?: number,
+    count?: number,
+    next?: string,
+    previous?: string,
+    results: T[],
+    [key: string]: any;
+}
+export type Declaration = {
+    id: number,
+    creation_date: string,
+    deletion_date?: string,
+    personnel?: number,
+    personnel_name?: string,
+    type?: string,
+    department?: number,
+    department_name?: string,
+    state?: string,
+    ward_type?: string,
+    note?: string,
+    prof_fluor?: string,
+    typ_szkoly_plat?: string,
+    school_regon?: string,
+    school_kind?: string
+}
+export enum VisitKind {
+    NFZ = "NFZ",
+    Private = "Prywatna"
+}
+export type Visit = {
+    id?: number,
+    patient?: number,
+    doctor: number,
+    office: number,
+    date: string,
+    timeFrom?: string,
+    timeTo?: string,
+    state?: string,
+    visit_type?: number[],
+    interview?: string,
+    recommendation?: string,
+    examination?: string,
+    visit_kind?: VisitKind,
+    note?: string,
+    recognition_description?: string,
+    confirmed?: boolean,
+    latest_modification?: string
+}
+// export const visitSchema: z.ZodType<Visit> = z.object({
+//     patient: z.string({required_error: "Patien"})
+// });
+export class MyDrGetter<T> {
+    static async newInstance<U>(apiPath:string, reqHeaders?: any, queryData?: object|null): Promise<MyDrGetter<U>> {
+        const urlStr = MYDR_URL + apiPath + "?" + buildUrlQueryData(queryData);
+        const reqInit: RequestInit = {
+            method: "GET",
+        }
+        if(reqHeaders) {
+            reqInit.headers = reqHeaders;
+        }
+        const instance = new MyDrGetter<U>(urlStr, reqInit);
+        return instance.load();
+    }
+
+    ok: boolean = false;
+    status: number = 0;
+    index: number = 0;
+    results: T[] = [];
+    urlStr: string;
+    private _next: MyDrGetter<T>|null;
+    private _prev: MyDrGetter<T>|null;
+    private _nextUrl?:string;
+    cfgReq: RequestInit;
+    private constructor(urlStr: string, reqInit: RequestInit, prev?: MyDrGetter<T>) {
+        this.urlStr = urlStr;
+        this.cfgReq = reqInit;
+        this._prev = prev ? prev : null;
+        this._next = null;
+    }
+    async load():Promise<MyDrGetter<T>> {
+        console.log("Fetching " + this.urlStr + " with headers " + JSON.stringify(this.cfgReq));
+        let res = await fetch(this.urlStr, this.cfgReq);
+        this.status = res.status;
+        this.ok = res.ok && res.status >= 200 && res.status < 300 ;
+        if(!res.ok) {
+            console.log("Failed to fetching request " + this.urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            this.results = [];
+            return this;
+        }
+        
+        const current = (await res.json()) as QResponse<T>;
+        this.index = current.current_page || 0;
+        this.results = current.results ? current.results : [];
+        if(current.next && this.status >= 200 && this.status < 300) {
+            this._nextUrl = current.next;
+        }
+        return this;
+    }
+    size(): number {
+        return this.results.length;
+    }
+    hasNext(): boolean {
+        return this._nextUrl ? true : false;
+    }
+    public async next():Promise<MyDrGetter<T>|null> {
+        if(this.status == 0) {
+            return this.load();
+        }
+        if(!this._nextUrl) {
+            return null;
+        }
+        if(this._next) return this._next;
+        this._next = new MyDrGetter(this._nextUrl, this.cfgReq, this);
+        this._next.index = this.index + 1;
+        return await this._next.load();
+    }
+    public async forEach(callbackfn: (value: T[], index: number) => boolean|Promise<boolean>) {
+        let iter: MyDrGetter<T> | null = this;
+        let cont = callbackfn(iter.results, iter.index);
+        const isPromise = typeof cont != "boolean";
+        if(isPromise) {
+            cont = await cont;
+        }
+        while(cont) {
+            iter = await iter.next();
+            if(iter == null) break;
+            cont = callbackfn(iter.results, iter.index);
+            if(isPromise) {
+                cont = await cont;
+            }
+        }
+    }
+}
+export class MyDr {
+    static async newInstance(): Promise<MyDr> {
+        let token = globalThis.myDrToken;
+        if(!token) {
+            await initToken();
+            token = globalThis.myDrToken;
+        }
+        const current = Date.now();
+        console.log("Current time: " + current + ". token expire in: " + token.expires_in);
+        if(token.expires_in <= current) {
+            console.log("Refreshing token...")
+            await refreshToken();
+            token = globalThis.myDrToken;
+        }
+        console.log("Token: " + token.access_token)
+        return new MyDr(token.access_token);
+    }
+    requiredColumns: string[] = ["name", "surname", "pesel"];
+    token: string;
+    headers: any;
+    page_size = 100;
+    private constructor(token : string) {
+        this.token = token;
+        this.headers = {
+            'Authorization': "Bearer " + this.token
+        }
+    }
+    async newPatientGetter(queryData: object): Promise<MyDrGetter<MyDrUser>> {
+        return MyDrGetter.newInstance<MyDrUser>("/patients", this.headers, queryData);
+    }
+    async newDeclareGetter(patientPk: string, queryData?: object): Promise<MyDrGetter<Declaration>> {
+        const apiPath = "/patients/" + patientPk + "/declarations/";
+        return MyDrGetter.newInstance<Declaration>(apiPath, this.headers, queryData);
+    }
+    async newVisitGetter(patientPk: string, queryData?: object): Promise<MyDrGetter<Visit>> {
+        const apiPath = "/patients/" + patientPk + "/visits/";
+        return MyDrGetter.newInstance<Visit>(apiPath, this.headers, queryData);
+    }
+
+    async getOneDeclaration(patient_pk: number): Promise<Declaration | null> {
+        let results: Array<Declaration> = new Array<Declaration>();
+        let getter:MyDrGetter<Declaration>|null = await this.newDeclareGetter(patient_pk.toString());
+        let declraration: Declaration|null = null;
+        await getter.forEach((declrs: Declaration[], _) => {
+            for(let declr of declrs) {
+                if(!declr.deletion_date) {
+                    declraration = declr;
+                    break;
+                }
+            }
+            return declraration == null; //return continuation condition
+        });
+        return declraration ? declraration : null;
+    }
+    async getStaffByPk(id: string | number, role: ("doctors" | "nurses" | "receptionists") ): Promise<Staff|null> {
+        const urlStr = MYDR_URL + "/" + role + "/" + id.toString();
+        const reqInit: RequestInit = {
+            method: "GET",
+            headers: this.headers
+        }
+        let res = await fetch(urlStr, reqInit);
+        let ok = res.ok && res.status >= 200 && res.status < 300 ;
+        if(!ok) {
+            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            return null;
+        }
+        return (await res.json()) as Staff;
+    }
+    async getDoctorByPk(id: number): Promise<Staff|null> {
+        return this.getStaffByPk(id, "doctors");
+    }
+
+    async getPatientByPk(id: number): Promise<MyDrUser|null> {
+        const urlStr = MYDR_URL + "/patients/" + id.toString();
+        const reqInit: RequestInit = {
+            method: "GET",
+            headers: this.headers
+        }
+        let res = await fetch(urlStr, reqInit);
+        let ok = res.ok && res.status >= 200 && res.status < 300 ;
+        if(!ok) {
+            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            return null;
+        }
+        return (await res.json()) as MyDrUser;
+    }
+    async getOnePatient(queryData: object): Promise<MyDrUser|null> {
+        let getter: MyDrGetter<MyDrUser>|null = await this.newPatientGetter(queryData);
+        let user: MyDrUser|null = null;
+        await getter.forEach((patients: MyDrUser[], _) => {
+            //Query declarations in paralel, if anyone is ok then resolve promise, ignore other queries
+            return new Promise<boolean>((resolve, _) => {
+                let repCount = 0;
+                for(let i = 0; i < patients.length; i++) {
+                    if(!patients[i].active) continue;
+                    this.getOneDeclaration(patients[i].id as number)
+                        .then(declr => {
+                            repCount++;
+                            if(declr) {
+                                user = patients[i];
+                            } 
+                            if(user != null || repCount == patients.length) {
+                                resolve(user === null);
+                            }
+                        });
+                    if(user) break;
+                }
+            });
+        });
+        return user;
+    }
+    // async getPatients(pesel: string): Promise<MyDrGetter<MyDrUser>> {
+    //     let response = await this.get(MYDR_URL + "/patients/", {pesel: pesel});
+    //     const getter = new MyDrGetter<MyDrUser>(MYDR_URL + "/patients/", {pesel: pesel}, this.headers);
+    //     getter.next();
+    //     if (!response.ok) {
+    //         console.log(...response.headers);
+    //         console.log(response.text);
+    //         console.log(response.status);
+    //         throw new Error("Network response was not OK");
+    //     }
+    
+    //     let resData = (await response.json()) as any;
+    //     let count = resData.count;
+    //     if(!count || count == 0) return null;
+    //     if(count > 1) {
+    //         console.warn("Found two MyDR profiles for the same patient with email" + email)
+    //     }
+    //     let result = (resData.results as Array<any>)[0];
+    //     //delete result.pesel;
+    //     return result;
+    // }
+    async getFreeSlots(date: string) {
+        const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData({date_from: date, date_to: date, visit_duration: 10});
+        const reqInit: RequestInit = {
+            method: "GET",
+            headers: this.headers
+        }
+        let res = await fetch(urlStr, reqInit);
+        const ok = res.ok && res.status >= 200 && res.status < 300 ;
+        if(!ok) {
+            res.text().then((text) => {
+                console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + text);
+            })
+            
+            return {success: false, httpCode: ResultCode.SERVER_ERROR, doctors: [], departments: [], slots: [],
+                message: "Nie udało się pobrać wolnych miejsc ze zdalnego serwera"};
+        }
+        
+        const data = (await res.json());
+        return {success: true, httpCode: ResultCode.OK, message: "OK", doctors: data.doctors, departments: data.departments, slots: data.results};
+    }
+    async makeAppointment(visit: Visit):Promise<Result> {
+        let url = MYDR_URL + "/visits/";
+        let cfgReq = {
+            method: "POST",
+            headers: {"Content-Type": "application/json", ...this.headers},
+            body: JSON.stringify(visit)
+        };
+        let response = await fetch(url, cfgReq);
+        if (!response.ok) {
+            const resText = await response.text();
+            console.log("Failed in makeAppointment: " + resText);
+            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: "Nie udało się umówić na spotkanie: nieznany błąd"};
+        }
+        let resData = await response.json();
+        return {success: true, httpCode: ResultCode.OK, message: "OK", visit: resData as Visit};
+    }
+    async updatePatient(data: any): Promise<Result> {
+        if(!data.id) {
+            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: "id is required"};
+        }
+        let message = "";
+        for(let k in this.requiredColumns) {
+            if(!data[k]) {
+                message += k + " is required";
+            }
+        }        
+        if(message.length > 0) {
+            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: message};
+        }
+
+        let url = MYDR_URL + "/patients/" + data.id + "/";
+        delete data.id;
+        let cfgReq = {
+            method: "PATCH",
+            headers: this.headers,
+            body: JSON.stringify(data)
+        };
+        let response = await fetch(url, cfgReq);
+        if (!response.ok) {
+            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: await response.text()};
+        }
+        let resData = await response.json();
+        return {success: true, httpCode: ResultCode.OK, message: "OK", patient: resData as MyDrUser}
+    }
+    async createPatient(data: any): Promise<Result> {
+        let message = "";
+        for(let k in this.requiredColumns) {
+            if(!data[k]) {
+                message += k + " is required";
+            }
+        }        
+        if(message.length > 0) {
+            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: message};
+        }
+
+        let url = MYDR_URL + "/patients/";
+        delete data.id;
+        let cfgReq = {
+            method: "POST",
+            headers: this.headers,
+            body: JSON.stringify(data)
+        };
+        let response = await fetch(url, cfgReq);
+        if (!response.ok) {
+            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: await response.text()};
+        }
+        let resData = await response.json();
+        return {success: true, httpCode: ResultCode.OK, message: "OK", patient: resData as User}
+    }
+}
+/**
+export interface Address {
+    id: number,
+    country: string,
+    street: string,
+    street_number: string,
+    flat_number: string,
+    postal_code: string,
+    city: string,
+    province: string
+}
+export interface Patient {
+    id?: number,
+    name: string,
+    surname: string,
+    telephone?: string,
+    second_telephone?: string,
+    email: string,
+    date_of_birth?: string,
+    sex?: string,
+    pesel: string,
+    identity_type?: string,
+    identity_num?: string,
+    country?: string,
+    supervisor?: 0,
+    nfz?: string,
+    rights?: string,
+    residence_address?: Address,
+    second_name?: string,
+    maiden_name?: string,
+    place_of_birth?: string,
+    internal_card_id?: string,
+    registration_address?: Address,
+    blood_type?: string,
+    active?: boolean,
+    teryt?: number
+}
+ */
+interface Token {
+    expires_in: number,
+    access_token: string,
+    token_type: string,
+    scope: string,
+    refresh_token: string
+}
+
+const tokenUrl = MYDR_URL + "/o/token/";
+
+if(!globalThis.myDrToken) {
+    initToken();
+    //REFRESH TOKEN: Bearer: GeJdGcYINDWO6bYvxG3963Do2OwXMA, Refresh: WlVOtwD19NdT7L5qSVUqY1gXszS8C3
+    //{"access_token": "76D3aJkhbQolmoDjHMrCoLAVYeD9R4", "token_type": "Bearer", "expires_in": 36000, "refresh_token": "gxh3w2u5sDapmAYyYih5Vt6RlpfZjd", "scope": "external_api"}
+    // globalThis.myDrToken = {
+    //     access_token: "y6McEMa4CxUUdprdBJJML02AIShmxP", 
+    //     token_type: "Bearer", 
+    //     expires_in: Date.now() + 36000000, 
+    //     refresh_token: "BwQx07CQApYhGgdkhvakki4Zkhak5S", 
+    //     scope: "external_api"};
+}
+
+async function initToken() {
+    let reqBody = {
+        grant_type: "password",
+        username: MYDR_USER,
+        password: MYDR_PASSWORD,
+        client_id: MYDR_CLIENT_ID,
+        client_secret: MYDR_CLIENT_SECRET
+    }
+    let cfgReq = {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            'Accept': 'application/json'
+        },
+        body: buildUrlQueryData(reqBody)
+    }
+    let response = await fetch(tokenUrl, cfgReq);
+    let resToken = await response.json() as Token;
+    resToken.expires_in = Date.now() + resToken.expires_in * 1000;
+    globalThis.myDrToken = resToken;
+    console.log("Init token: Bearer: " + resToken.access_token + ", Refresh: " + resToken.refresh_token)
+}
+async function refreshToken() {
+
+    let reqBody: object = {
+        grant_type: "refresh_token",
+        refresh_token: globalThis.myDrToken.refresh_token,
+        client_id: MYDR_CLIENT_ID,
+        client_secret: MYDR_CLIENT_SECRET
+    }
+
+    let cfgReq = {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            'Accept': 'application/json'
+        },
+        body: buildUrlQueryData(reqBody)
+    }
+    console.log("fetching token: " + tokenUrl)
+    let response = await fetch(tokenUrl, cfgReq);
+    if (!response.ok) {
+        throw new Error("Network response was not OK, http status " + response.status);
+    }
+    console.log("Finish fetching token: " + tokenUrl)
+    let resToken = (await response.json()) as Token;
+    resToken.expires_in = resToken.expires_in * 1000 + Date.now(); //convert seconds to miliseconds
+
+    globalThis.myDrToken = resToken;  
+    console.log("REFRESH TOKEN: Bearer: " + resToken.access_token + ", Refresh: " + resToken.refresh_token)
+}
+
+//adimr52@gmail.com 98112402795
+//katarzyna.kuszx@gmail.com 48072843497
