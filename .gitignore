@@ -8,6 +8,7 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+prisma/migrations
 prisma/migrations/20240302120316_init/migration.sql
 prisma/migrations/20240310054741_init/migration.sql
 prisma/migrations/20240311221137_init/migration.sql
@@ -21,3 +22,4 @@ prisma/migrations/20240319031015_init/migration.sql
 prisma/migrations/20240319033619_init/migration.sql
 prisma/migrations/20240319091124_init/migration.sql
 prisma/migrations/20240319094940_init/migration.sql
+prisma/migrations/migration_lock.toml
