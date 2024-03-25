@@ -29,7 +29,8 @@
                     </div> -->
 					<input name="pesel" type="number" placeholder="Twój numer PESEL" class="m-2 w-full rounded-full bg-transparent p-4 text-gray-900 placeholder-gray-600 dark:text-white dark:placeholder-white" />
 					<div class="md:pr-1.5 lg:pr-0">
-						<button title="Get Started" class="relative ml-auto h-12 w-20 before:absolute before:inset-0 before:rounded-full before:bg-primary before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 sm:w-auto sm:px-6 dark:before:bg-primaryLight">
+						<button type="submit" title="Get Started" 
+							class="relative ml-auto h-12 w-20 before:absolute before:inset-0 before:rounded-full before:bg-primary before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 sm:w-auto sm:px-6 dark:before:bg-primaryLight">
 							<span class="relative hidden w-max font-semibold text-white md:block dark:text-gray-900"> Zaczynaj </span>
 							<svg xmlns="http://www.w3.org/2000/svg" class="relative mx-auto h-6 w-6 text-white md:hidden dark:text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

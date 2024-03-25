@@ -51,6 +51,7 @@ export const actions: Actions = {
 			if(checkPesel(pesel)) {
 				const result = await tryRegister(pesel);
 				if(!result.success) {
+					locals.regisUser = result.user || result.waitingUser;
 					return fail(result.httpCode, {issues: [{message: result.message}]})
 				}
 				locals.message = result.message;
