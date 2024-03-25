@@ -40,16 +40,13 @@ export async function POST({ request, locals, cookies }) {
     const myDrUser = await myDr.getPatientByPk(user.id);
     if(myDrUser == null) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
-        user.id = null;
-        user.active = false;
-        updateUser(user);
+        updateUser({pesel: pesel, active: false, id: null});
         locals.message = PUBLIC_UA_DEACTIVATED;
         throw redirect(303, "/app/logout");
     }
     if(!myDrUser.active) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
-        user.active = false;
-        updateUser(user);
+        updateUser({pesel: pesel, active: false});
         locals.message = PUBLIC_UA_DEACTIVATED;
         throw redirect(303, "/app/logout");
     }

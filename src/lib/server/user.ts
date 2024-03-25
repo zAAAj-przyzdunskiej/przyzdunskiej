@@ -18,7 +18,9 @@ export async function getUserByPesel(pesel:string): Promise<User|null>{
 }
 export async function updateUser(user: Partial<User>): Promise<User|null> {
 	const result = await update( "User", user, {pesel: user.pesel} )
-	return result.rows.length > 0 ? result.rows[0] : null;
+	let row:User|null = result.rows.length > 0 ? result.rows[0] : null;
+	console.log(row);
+	return row;
 }
 export async function createUser(user: Partial<User>): Promise<User|null> {
 	const result = await insert("User", user);
@@ -98,8 +100,8 @@ export async function resetPassword(pesel: string) {
 	}
 	let psw = randomNumber(4).toString();
 	let hashed = await bcrypt.hash(psw, 12);
-	localUser = await updateUser({password: hashed}) as User;
-	//console.log(psw + " HASH = " + hashed + " , Updated: " + localUser.password);
+	localUser = await updateUser({pesel: pesel, password: hashed}) as User;
+	console.log(psw + " HASH = " + hashed + " , Updated: " + localUser.password);
 	if(! (await sendSMS(localUser.telephone, PUBLIC_MSG_PASSWORD + ":  " + psw))) {
 		return { success: true, httpCode: ResultCode.OK, user: localUser,
 			message: PUBLIC_UA_SUCCEED_BUT_SMS}

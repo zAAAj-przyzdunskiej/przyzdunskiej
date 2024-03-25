@@ -44,7 +44,7 @@ export async function select(query: string, params: string[]):Promise<QResult> {
     return {error: error, rows: rows};
 }
 export async function insert(tableName: string, record: object):Promise<QResult>  {
-    let sql = "INSERT INTO \"" + tableName + "\"(";
+    let sql = "INSERT INTO " + pg.escapeIdentifier(tableName) + "(";
 	let valSql = " VALUES(";
 	let idx = 1;
 
@@ -86,19 +86,20 @@ export async function update(tableName: string, record: object, where: object):P
 
 	Object.entries(record).forEach(([key, value]) => {
         if(key && value) {
-            sql = sql + key + " = " + value + ", ";
+            sql = sql + key + " = " + pg.escapeLiteral(value) + ", ";
         }
 	});
     sql = sql.slice(0, sql.length - 2) + " WHERE ";
 	Object.entries(where).forEach(([key, value]) => {
         if(key && value) {
-            sql = sql + key + " = " + value + " AND ";
+            sql = sql + key + " = " + pg.escapeLiteral(value) + " AND ";
         }
 	});
     sql = sql.slice(0, sql.length - 5) + " RETURNING *";
 
     
     const statement = sql;
+    console.log(statement);
 
     const client = await getClient();
     let rows:any[] = [];

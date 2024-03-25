@@ -42,7 +42,9 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/pg": "^8.11.4",
 		"bcryptjs": "^2.4.3",
+		"dotenv": "^16.4.5",
 		"jose": "^5.2.3",
 		"pg": "^8.11.3",
 		"validator": "^13.11.0",
