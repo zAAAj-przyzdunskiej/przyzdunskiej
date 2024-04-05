@@ -4,14 +4,23 @@ import type { Actions } from './$types';
 import { checkPesel, userRegisterSchema, type User } from '$lib/utils';
 import { PUBLIC_INVALID_PESEL } from '$env/static/public';
 
-export async function load({locals, url}) {
-    let message = locals.message;
-    if(! message) {
-		message = "Gdy tylko otrzymamy Twoje dane za pośrednictwem deklaracja wyboru, wyślemy Ci link umożliwiający aktywację konta \
-		<br> Obsługujemy wyłącznie następujące obszary objęte kodami pocztowymi:"
+export async function load(event) {
+	const cookieOptions = {
+		httpOnly: false,
+		path: '/',
+		secure: false,
+		maxAge: 5
+	};
+
+    let message = event.cookies.get("message");
+	event.cookies.delete("message", cookieOptions);
+    if(!message || message.length == 0) {
+		console.log("No Messages in cookies");
+		message = "Aby zostać naszym pacjentem należy złożyć oświadczenie o wyborze przychodni POZ"
 	}
-	// || {pesel: "", name: "", surname: "", email: "", telephone: "", zipcode: ""}
-	return locals.regisUser ? {message: message, user: locals.regisUser} : {message : message};
+	const pesel = event.cookies.get("pesel");
+	event.cookies.delete("pesel", cookieOptions);
+	return {message: message, user: {pesel: pesel || "", name: "", surname: "", email: "", telephone: "", zipcode: ""}};
 }
 export const actions: Actions = {
     registerOrFollowup: async ({ cookies, request, locals, url }) => {

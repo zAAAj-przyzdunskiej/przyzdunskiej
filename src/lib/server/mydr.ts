@@ -101,8 +101,8 @@ export class MyDrGetter<T> {
         console.log("Fetching " + this.urlStr);// + " with headers " + JSON.stringify(this.cfgReq));
         let res = await fetch(this.urlStr, this.cfgReq);
         this.status = res.status;
-        this.ok = res.ok && res.status >= 200 && res.status < 300 ;
-        if(!res.ok) {
+        this.ok = res.status >= 200 && res.status < 300 ;
+        if(!this.ok) {
             console.log("Failed to fetching request " + this.urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
             this.results = [];
             return this;
@@ -212,7 +212,7 @@ export class MyDr {
             headers: this.headers
         }
         let res = await fetch(urlStr, reqInit);
-        let ok = res.ok && res.status >= 200 && res.status < 300 ;
+        let ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
             console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
             return null;
@@ -230,7 +230,7 @@ export class MyDr {
             headers: this.headers
         }
         let res = await fetch(urlStr, reqInit);
-        let ok = res.ok && res.status >= 200 && res.status < 300 ;
+        let ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
             console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
             return null;
@@ -250,14 +250,15 @@ export class MyDr {
                         .then(declr => {
                             repCount++;
                             if(declr) {
-                                user = patients[i];
-                            } 
-                            if(user != null || repCount == patients.length) {
+                                if(user == null) user = patients[i];
+                                resolve(false);
+                            } else if(repCount == patients.length) {
                                 resolve(user === null);
                             }
                         });
                     if(user) break;
                 }
+                resolve(repCount == patients.length && user === null);
             });
         });
         return user;
@@ -266,7 +267,7 @@ export class MyDr {
     //     let response = await this.get(MYDR_URL + "/patients/", {pesel: pesel});
     //     const getter = new MyDrGetter<MyDrUser>(MYDR_URL + "/patients/", {pesel: pesel}, this.headers);
     //     getter.next();
-    //     if (!response.ok) {
+    //     if (response.status < 200 || response.status >= 300) {
     //         console.log(...response.headers);
     //         console.log(response.text);
     //         console.log(response.status);
@@ -290,7 +291,7 @@ export class MyDr {
             headers: this.headers
         }
         let res = await fetch(urlStr, reqInit);
-        const ok = res.ok && res.status >= 200 && res.status < 300 ;
+        const ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
             res.text().then((text) => {
                 console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + text);
@@ -311,7 +312,8 @@ export class MyDr {
             body: JSON.stringify(visit)
         };
         let response = await fetch(url, cfgReq);
-        if (!response.ok) {
+        let ok = response.status >= 200 && response.status < 300
+        if (!ok) {
             const resText = await response.text();
             console.log("Failed in makeAppointment: " + resText);
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: "Nie udało się umówić na spotkanie: nieznany błąd"};
@@ -319,6 +321,38 @@ export class MyDr {
         let resData = await response.json();
         return {success: true, httpCode: ResultCode.OK, message: "OK", visit: resData as Visit};
     }
+    async getAppointmentByPk(id: string): Promise<Visit|null> {
+        const urlStr = MYDR_URL + "/visits/" + id.toString();
+        const reqInit: RequestInit = {
+            method: "GET",
+            headers: this.headers
+        }
+        let res = await fetch(urlStr, reqInit);
+        let ok = res.status >= 200 && res.status < 300 ;
+        if(!ok) {
+            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            return null;
+        }
+        return (await res.json()) as Visit;
+    }
+    async cancelAppointment(visit: Visit):Promise<Result> {
+        let url = MYDR_URL + "/visits/" + visit.id + "/";
+        let cfgReq = {
+            method: "PATCH",
+            headers: {"Content-Type": "application/json", ...this.headers},
+            body: JSON.stringify({patient: visit.patient, doctor: visit.doctor, office: visit.office, date: visit.date, state: "Anulowana"})
+        };
+        let response = await fetch(url, cfgReq);
+        let ok = response.status >= 200 && response.status < 300
+        if (!ok) {
+            const resText = await response.text();
+            console.log("Failed in cancelAppointment: " + resText);
+            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: "Nie udało się umówić na spotkanie: nieznany błąd"};
+        }
+        let resData = await response.json();
+        return {success: true, httpCode: ResultCode.OK, message: "OK", visit: resData as Visit};
+    }
+
     async updatePatient(data: any): Promise<Result> {
         if(!data.id) {
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: "id is required"};
@@ -341,7 +375,7 @@ export class MyDr {
             body: JSON.stringify(data)
         };
         let response = await fetch(url, cfgReq);
-        if (!response.ok) {
+        if (response.status < 200 || response.status >= 300) {
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: await response.text()};
         }
         let resData = await response.json();
@@ -366,7 +400,7 @@ export class MyDr {
             body: JSON.stringify(data)
         };
         let response = await fetch(url, cfgReq);
-        if (!response.ok) {
+        if (response.status < 200 || response.status >= 300) {
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: await response.text()};
         }
         let resData = await response.json();
@@ -474,7 +508,7 @@ async function refreshToken() {
     }
     //console.log("fetching token: " + tokenUrl)
     let response = await fetch(tokenUrl, cfgReq);
-    if (!response.ok) {
+    if (response.status < 200 || response.status >= 300) {
         throw new Error("Network response was not OK, http status " + response.status);
     }
     console.log("Finish fetching token: " + tokenUrl)

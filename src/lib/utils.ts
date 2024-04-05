@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import validator from 'validator';
 import { PUBLIC_INVALID_EMAIL, PUBLIC_INVALID_PASSWORD, PUBLIC_INVALID_PESEL, PUBLIC_INVALID_PHONE, PUBLIC_INVALID_ZIP, PUBLIC_MISSING_PASSWORD, PUBLIC_MISSING_PESEL, PUBLIC_MISSING_PHONE, PUBLIC_MISSING_ZIP } from '$env/static/public';
-
+export type VisitTime = {date: string, timeFrom?: string, [key: string] : any};
 export type Result = {
 	success: boolean;
 	message: string;
@@ -75,7 +75,15 @@ export function buildUrlQueryData(data?: object | null): string {
 	}
 	return q.slice(0, -1);
 }
-export function checkPesel(pesel: string): boolean {
+export function checkPesel(pesel: string|null|undefined): boolean {
+	if(!pesel) {
+		return false;
+	}
+	pesel = pesel.trim();
+	if(pesel.length !== 11) {
+		return false;
+	}
+	//console.log("pesel is not null and length == 11");
 	const monthWithCentury = Number(pesel.substring(2, 4));
 
 	// Century is encoded in month: https://en.wikipedia.org/wiki/PESEL.
@@ -115,6 +123,29 @@ export function dateToStr(date: Date): string {
 	const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
 	const year = date.getFullYear();
 	return `${year}-${month}-${day}`;
+}
+export function formatTime(timeStr: string| undefined): string {
+    if(!timeStr) {
+        return "24:00";
+    }
+    if(timeStr.length > 5) {
+        return timeStr.slice(0,5);
+    }
+    return timeStr;
+}
+export function compareVisit(lVisit: VisitTime, rVisit: VisitTime): number {
+    let right = rVisit.date, left = lVisit.date;
+    if(right == left) {
+        right = rVisit.timeFrom || "24:00";
+        left = lVisit.timeFrom || "24:00";
+    }
+    if(left < right) {
+        return -1;
+    } else if(right == left) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 export enum IndentityType {
 	passport = 'passport',
@@ -466,8 +497,8 @@ export type User = {
 	photo: string | null
 	registration_address_id: number | null
 	residence_address_id: number | null
-	createdAt: Date | null
-	updatedAt: Date | null
+	createdAt: string | null
+	updatedAt: string | null
 }
 export const userLoginSchema: z.ZodType<UserLogin> = z.object({
 	pesel: z.string({required_error: PUBLIC_MISSING_PESEL})
@@ -512,3 +543,6 @@ export const userRegisterSchema: z.ZodType<UserRegister> = z
 	// 	message: 'Passwords do not match'
 	// });
 export type RegisterUserInput = z.infer<typeof userRegisterSchema>;
+export function convertDbTimestampToDate(dbTimestamp: string) {
+	return new Date(dbTimestamp.replace(' ', 'T'));
+}

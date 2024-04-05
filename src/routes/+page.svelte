@@ -1,36 +1,41 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import { PUBLIC_INVALID_PESEL } from '$env/static/public';
+	import LogoNfz from '$lib/LogoNFZ.svelte';
+	import { checkPesel } from '$lib/utils.js';
 	import { onMount } from 'svelte';
 
-	export let data;
-	onMount(() => {
-		if (data.message) alert(data.message);
-	});
+	export let form;
+	//on:submit={(event) => {if (!checkPesel(peselNumber)) { event.preventDefault(); alert(PUBLIC_INVALID_PESEL); }}}
+	let peselNumber: string | null = null;
+	let peselPattern = '/^[0-9]{2}([02468]1|[13579][012])(0[1-9]|1[0-9]|2[0-9]|3[01])[0-9]{5}$/';
 </script>
 
 <div class="relative lg:flex lg:items-center lg:gap-12">
-	<div class="order-2 lg:order-1 lg:justify-between text-center sm:mx-auto sm:w-10/12 md:mt-12 md:w-2/3 lg:mr-auto lg:mt-0 lg:w-6/12 lg:text-left">
-		<h1 class="text-4xl font-bold text-gray-900 md:text-6xl lg:text-5xl xl:text-6xl dark:text-white"><span class="text-primary dark:text-primaryLight">Twója Przychodnia</span> zawsze przy Tobie</h1>
+	<div class="order-2 text-center sm:mx-auto sm:w-10/12 md:mt-12 md:w-2/3 lg:order-1 lg:mr-auto lg:mt-0 lg:w-6/12 lg:justify-between lg:text-left">
+		<h1 class="text-4xl font-bold text-gray-900 md:text-6xl lg:text-5xl xl:text-6xl dark:text-white"><span class="text-primary dark:text-primaryLight">Twoja Przychodnia</span> zawsze przy Tobie</h1>
 		<ul class="mt-8 text-gray-600 dark:text-gray-300">
-			<li>Załatwiaj swoje sprawy z lekarzem bez konieczności wizyty osobistej w przychodni</li>
-			<li>Uzyskaj konsultacje, e-recepty, skierowania czy badania labolatoryjne</li>
-			<li>Medycyna rodzinna i ginekologia (antykoncepcja)</li>
-			<li>A wszystko bezpłatnie w ramach NFZ</li>
+			<li>Załatwiaj swoje sprawy z lekarzem bez konieczności wizyty osobistej w Przychodni</li>
+			<li>Uzyskaj konsultacje, e-recepty, skierowania czy badania labolatoryjne.</li>
+			<li>Medycyna rodzinna i Ginekologia</li>
+			<li class=" flex flex-row flex-nowrap">A wszystko bezpłatnie &nbsp;<i class=" -mr-6 items-center justify-start text-start text-lg text-primary dark:text-primaryLight"> w ramach </i><LogoNfz style="fill-primary dark:fill-primaryLight" /></li>
 		</ul>
-        <br>
+		<br />
 		<div>
-			<form action="/register/?/registerOnly" method="POST" class="mt-12 w-full">
-				<i class="text-gray-500 dark:text-gray-300">Jeżeli podpisałeś formularz „oświadczenie wyboru”, wpisz poniżej swój numer PESEL i sprawdź, czy Twoje konto jest już gotowe</i>
-				<div class="relative flex items-center rounded-full border border-primary/10 bg-white p-1 px-2 shadow-md md:p-2 lg:pr-3 dark:border-gray-700 dark:bg-gray-900">
+			<form method="POST" class="mt-12 w-full">
+				<i class="text-gray-500 dark:text-gray-300">Wpisz poniżej swój PESEL aby rozpocząć konsultację lekarską. <br />
+					Jeżeli nie jesteś jeszcze Pacjentem Naszej Przychodni w dalszych krokach dowiesz się jak zmienić swoją Przychodnię POZ.</i>
+				<div class="relative flex items-center rounded-full border border-primary/10 bg-white p-1 px-2 shadow-md md:p-2 lg:pr-3 dark:border-gray-700 dark:bg-gray-900 mt-5">
 					<!-- <div class="pl-6 py-3">
                         <svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" class="m-auto fill-blue-900/60 dark:fill-gray-400" viewBox="0 0 1201 1201" fill="currentColor">
                             <path d="M399.23 421.17a11.47 11.47 0 0 0 16.2 0l35.86-35.86a36.76 36.76 0 0 0 0-51.92l-95.51-95.51a36.72 36.72 0 0 0-51.92 0L268 273.74a11.47 11.47 0 0 0 0 16.2zM795 729l-35.86 35.86a11.47 11.47 0 0 0 0 16.2L890.35 912.3a11.47 11.47 0 0 0 16.2 0l35.86-35.86a36.76 36.76 0 0 0 0-51.92L846.89 729a36.76 36.76 0 0 0-51.89 0zM697.75 589.3h135.52V465.32h123.98V329.8H833.27V205.82H697.75V329.8H573.77v135.52h123.98V589.3z" data-name="&amp;lt;Path&amp;gt;" fill="#17b3c1" class="color000 svgShape"></path>
                             <path d="M1001.38 1050.69c-18.17-3.18-37.26-.17-55.1-5.07a44.9 44.9 0 0 1-9.26-3.51c6.45-.61 13.5-1.89 17.91-6.21a13.38 13.38 0 0 0-4.05-21.81c-6.72-3.06-16.71-1.57-23.46.71a29.26 29.26 0 0 0-11 6.56c-.49-.05-1-.09-1.46-.15-8.72-1.13-18.86-3.61-25.89-9.22a18.14 18.14 0 0 1-5.57-7.84c9.52 3.5 20 4.36 28.2-1.45 7.4-5.27 10-16.49 3.67-23.66-5.3-6-13.51-6.2-21-6a40.81 40.81 0 0 0-16.74 3.8l-.86-.69c-6.83-5.58-13.23-11.75-19.59-17.93 19.78-11.85 28.59-25.1 28.73-25.32l.22-.34-143.19-143.2-.4-.4-.35.44c-.08.1-8.12 10.12-27.1 11.51-17.59 1.3-48.42-4.74-95.41-40.85-92.38-71-181.47-171.41-219.55-219.55-20.53-26-20.9-51.4-17.59-68.17a87.1 87.1 0 0 1 12.26-30.54l.24-.34-147.31-147.32-.34.21c-.38.24-37.81 24.35-44.46 83.18-4.7 41.54 6.74 90.06 34 144.21 34.9 69.32 95.8 147.67 181 232.88 87.27 87.27 167.46 149.73 238.35 185.67 47.65 24.15 91 36.34 129.11 36.34a168.05 168.05 0 0 0 17.73-.92 139 139 0 0 0 33.88-7.83c8.65 8.37 17.23 17 26.65 24.52a29.38 29.38 0 0 0-1.32 6.46c-2.44 26.29 23.48 38.95 47.57 42.68 3.13 13.13 20.11 21.7 32.33 24.73 17.63 4.36 35.84 1.56 53.56 4.67 5.58 1 11.31-1.5 12.92-7.33 1.4-5.07-1.71-11.94-7.33-12.92Zm-58.8-17.09c.44 0 .34.09 0 0Z" data-name="&amp;lt;Compound Path&amp;gt;" fill="#17b3c1" class="color000 svgShape"></path>
                         </svg>
                     </div> -->
-					<input name="pesel" type="number" placeholder="Twój numer PESEL" class="m-2 w-full rounded-full bg-transparent p-4 text-gray-900 placeholder-gray-600 dark:text-white dark:placeholder-white" />
+					<input pattern={peselPattern} required name="pesel" type="number" placeholder="Twój numer PESEL" class="m-2 w-full rounded-full bg-transparent p-4 text-gray-900 placeholder-gray-600 invalid:border-red-500 invalid:text-red-500 dark:text-white dark:placeholder-white" />
+
 					<div class="md:pr-1.5 lg:pr-0">
-						<button type="submit" title="Get Started" 
-							class="relative ml-auto h-12 w-20 before:absolute before:inset-0 before:rounded-full before:bg-primary before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 sm:w-auto sm:px-6 dark:before:bg-primaryLight">
+						<button type="submit" title="Get Started" class=" relative ml-auto h-12 w-20 before:absolute before:inset-0 before:rounded-full before:bg-primary before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 group-invalid:pointer-events-none group-invalid:opacity-30 sm:w-auto sm:px-6 dark:before:bg-primaryLight">
 							<span class="relative hidden w-max font-semibold text-white md:block dark:text-gray-900"> Zaczynaj </span>
 							<svg xmlns="http://www.w3.org/2000/svg" class="relative mx-auto h-6 w-6 text-white md:hidden dark:text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -38,10 +43,21 @@
 						</button>
 					</div>
 				</div>
-			</form>
+				<div class="relative mb-6">
+					{#if form?.issues}
+						<ul class="mb-3 w-full text-left text-base text-red-800 dark:text-yellow-400">
+							{#each form.issues as { message }}
+								<li class="max-w-[90%] origin-[0_0] truncate pt-[0.37rem] text-lg font-thin italic leading-[2.15] text-red-600 dark:text-yellow-400">
+									{message}
+								</li>
+							{/each}
+						</ul>
+					{/if}
+				</div>
+		</form>
 		</div>
 	</div>
-	<div class="order-1 lg:order-2 w-full overflow-hidden lg:-mr-16 lg:w-7/12">
+	<div class="order-1 w-full overflow-hidden lg:order-2 lg:-mr-16 lg:w-7/12">
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
 			<g id="OBJECTS">
 				<g>
@@ -428,23 +444,13 @@
 
 <div class="relative lg:flex lg:items-center lg:gap-12">
 	<div class="xl:container">
-		<div class="mb-16">
-			<h2 class="mb-4 text-2xl font-bold text-gray-800 md:text-4xl dark:text-white">Poznaj nasz zespół talentów</h2>
-			<p class="text-gray-600 dark:text-gray-300 italic">Dobre zdrowie to bogactwo, a wysokiej jakości opieka to najważniejsza rzecz, na którą każdy zasługuje. Ciężko pracujemy, aby realizować misję zapewniania każdemu najlepszej opieki</p>
+		<div class="my-12 md:mt-5 xl:-mt-6">
+			<h2 class="mb-4 text-2xl font-bold text-gray-800 md:text-4xl dark:text-white">Nasz zespół lekarski</h2>
+			<p class="italic text-gray-600 dark:text-gray-300">Dobre zdrowie jest lepsze niż największe bogactwo, a wysokiej jakości opieka to najważniejsza rzecz na którą każdy zasługuje! Ciężko pracujemy, aby realizować misję zapewniania każdemu najlepszej opieki.</p>
 		</div>
 		<div class="grid gap-6 px-4 sm:grid-cols-2 sm:px-0 md:grid-cols-3 lg:grid-cols-4">
 			<div class="group relative space-y-6 overflow-hidden rounded-3xl">
-				<img class="ransition mx-auto h-[26rem] w-full object-cover object-top grayscale duration-500 group-hover:scale-105 group-hover:grayscale-0" src="/marcin.webp" alt="Lek. Marcin Lewandowski" loading="lazy" width="640" height="805" />
-				<div class="absolute inset-x-0 bottom-0 mt-auto h-max translate-y-24 bg-gray-800 px-8 py-6 transition duration-300 ease-in-out group-hover:translate-y-0 dark:bg-white">
-					<div>
-						<h4 class="text-xl font-semibold text-white dark:text-gray-700">Lek. Marcin Lewandowski</h4>
-						<span class="block text-sm text-gray-500">PWZ 2755874</span>
-					</div>
-					<p class="mt-8 text-gray-300 dark:text-gray-600">Specjalista położnictwa i ginekologii</p>
-				</div>
-			</div>
-			<div class="group relative space-y-6 overflow-hidden rounded-3xl">
-				<img class="ransition mx-auto h-[26rem] w-full object-cover object-top grayscale duration-500 group-hover:scale-105 group-hover:grayscale-0" src="/krystyna.webp" alt="Lek. Krystyna Lewandowska" loading="lazy" width="640" height="805" />
+				<img class="ransition mx-auto h-[26rem] w-full object-cover object-top duration-500 group-hover:scale-105" src="/krystyna.webp" alt="Lek. Krystyna Lewandowska" loading="lazy" width="640" height="805" />
 				<div class="absolute inset-x-0 bottom-0 mt-auto h-max translate-y-24 bg-gray-800 px-8 py-6 transition duration-300 ease-in-out group-hover:translate-y-0 dark:bg-white">
 					<div>
 						<h4 class="text-xl font-semibold text-white dark:text-gray-700">Lek. Krystyna Lewandowska</h4>
@@ -454,17 +460,27 @@
 				</div>
 			</div>
 			<div class="group relative space-y-6 overflow-hidden rounded-3xl">
-				<img class="mx-auto h-[26rem] w-full object-cover object-top grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0" src="/karolina.webp" alt="Karolina Wrzesińska-Kryszak" loading="lazy" width="640" height="805" />
-				<div class="absolute inset-x-0 bottom-0 mt-auto h-max translate-y-24 bg-gray-800 px-8 py-6 transition duration-300 ease-in-out group-hover:translate-y-0 dark:bg-white">
+				<img class="mx-auto h-[26rem] w-full object-cover object-top transition duration-500 group-hover:scale-105" src="/karolina.webp" alt="Karolina Wrzesińska-Kryszak" loading="lazy" width="640" height="805" />
+				<div class="absolute inset-x-0 bottom-0 mt-auto h-max translate-y-24 bg-gray-800 py-6 pl-4 pr-2 transition duration-300 ease-in-out group-hover:translate-y-0 dark:bg-white">
 					<div>
-						<h4 class="text-xl font-semibold text-white dark:text-gray-700">Karolina Wrzesińska-Kryszak</h4>
+						<h4 class="text-xl font-semibold text-white dark:text-gray-700">Lek. Karolina Wrzesińska-Kryszak</h4>
 						<span class="block text-sm text-gray-500">PWZ 2755407</span>
 					</div>
 					<p class="mt-8 text-gray-300 dark:text-gray-600">Specjalista medycyny rodzinnej</p>
 				</div>
 			</div>
 			<div class="group relative space-y-6 overflow-hidden rounded-3xl">
-				<img class="ransition mx-auto h-[26rem] w-full object-cover object-top grayscale duration-500 group-hover:scale-105 group-hover:grayscale-0" src="/tomasz.webp" alt="Lek. Tomasz Kryszak" loading="lazy" width="640" height="805" />
+				<img class="ransition mx-auto h-[26rem] w-full object-cover object-top duration-500 group-hover:scale-105" src="/marcin.webp" alt="Lek. Marcin Lewandowski" loading="lazy" width="640" height="805" />
+				<div class="absolute inset-x-0 bottom-0 mt-auto h-max translate-y-24 bg-gray-800 px-8 py-6 transition duration-300 ease-in-out group-hover:translate-y-0 dark:bg-white">
+					<div>
+						<h4 class="text-xl font-semibold text-white dark:text-gray-700">Lek. Marcin Lewandowski</h4>
+						<span class="block text-sm text-gray-500">PWZ 2755874</span>
+					</div>
+					<p class="mt-8 text-gray-300 dark:text-gray-600">Specjalista położnictwa i ginekologii</p>
+				</div>
+			</div>
+			<div class="group relative space-y-6 overflow-hidden rounded-3xl">
+				<img class="ransition mx-auto h-[26rem] w-full object-cover object-top duration-500 group-hover:scale-105" src="/tomasz.webp" alt="Lek. Tomasz Kryszak" loading="lazy" width="640" height="805" />
 				<div class="absolute inset-x-0 bottom-0 mt-auto h-max translate-y-24 bg-gray-800 px-8 py-6 transition duration-300 ease-in-out group-hover:translate-y-0 dark:bg-white">
 					<div>
 						<h4 class="text-xl font-semibold text-white dark:text-gray-700">Lek. Tomasz Kryszak</h4>
@@ -474,5 +490,76 @@
 				</div>
 			</div>
 		</div>
+	</div>
+</div>
+<div class="relative mt-8 w-full lg:flex lg:items-center lg:gap-12">
+	<div class="w-full space-y-4">
+		<details class="group border-s-4 border-green-500 bg-gray-50 p-6 [&_summary::-webkit-details-marker]:hidden">
+			<summary class="flex cursor-pointer items-center justify-between gap-1.5">
+				<h2 class="text-lg font-medium text-gray-900">Jak skorzystać z Serwisu Pacjenta przyZdunskiej.pl?</h2>
+				<span class="shrink-0 rounded-full bg-white p-1.5 text-gray-900 sm:p-3">
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0 transition duration-300 group-open:-rotate-45" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+					</svg>
+				</span>
+			</summary>
+			<p class="mt-4 leading-relaxed text-gray-700">
+				Uprawnionymi do bezpłatnego korzystania z serwisu są Pacjenci zapisani do Przychodni przy Zduńskiej.
+				<br /> Po wpisaniu numeru PESEL i zalogowaniu się zostaniesz przekierowany do serwisu który umożliwi Ci kontakt z Naszymi Lekarzami:
+				<br /> teleporada, e-recepty, e-skierowania, e-zwolnienia, badania labolatoryjne czyli to wszystko co oferujemy, a Ty musiałbyś tracić czas na wizytę stacjonarną w Przychodni.
+			</p>
+		</details>
+
+		<details class="group border-s-4 border-green-500 bg-gray-50 p-6 [&_summary::-webkit-details-marker]:hidden">
+			<summary class="flex cursor-pointer items-center justify-between gap-1.5">
+				<h2 class="text-lg font-medium text-gray-900">Czy zapisanie się do Przychodni jest darmowe?</h2>
+				<span class="shrink-0 rounded-full bg-white p-1.5 text-gray-900 sm:p-3">
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0 transition duration-300 group-open:-rotate-45" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+					</svg>
+				</span>
+			</summary>
+			<p class="mt-4 leading-relaxed text-gray-700">Tak! Usługi, które oferujemy są wyłącznie w ramach NFZ, więc są darmowe. Przychodnia przy Zduńskiej zapewni Ci dostęp do lekarza stacjonarnie jak i poprzez wygodne teleporady.</p>
+		</details>
+
+		<details class="group border-s-4 border-green-500 bg-gray-50 p-6 [&_summary::-webkit-details-marker]:hidden">
+			<summary class="flex cursor-pointer items-center justify-between gap-1.5">
+				<h2 class="text-lg font-medium text-gray-900">Czy mogę zapisać się do Przychodni?</h2>
+				<span class="shrink-0 rounded-full bg-white p-1.5 text-gray-900 sm:p-3">
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0 transition duration-300 group-open:-rotate-45" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+					</svg>
+				</span>
+			</summary>
+			<p class="mt-4 leading-relaxed text-gray-700">
+				Nadal posiadamy miejsca dla nowych Pacjentów chcących wybrać Nas na swojego Lekarza Rodzinnego.
+				<br />Wpisz swój PESEL a strona dalej pokieruję Cię co zrobić.
+				<br />Opieką obejmuje pacjentów z Włocławka oraz okolicznych miejscowości.
+			</p>
+		</details>
+
+		<details class="group border-s-4 border-green-500 bg-gray-50 p-6 [&_summary::-webkit-details-marker]:hidden">
+			<summary class="flex cursor-pointer items-center justify-between gap-1.5">
+				<h2 class="text-lg font-medium text-gray-900">W jakich godzinach pracujecie?</h2>
+				<span class="shrink-0 rounded-full bg-white p-1.5 text-gray-900 sm:p-3">
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0 transition duration-300 group-open:-rotate-45" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+					</svg>
+				</span>
+			</summary>
+			<p class="mt-4 leading-relaxed text-gray-700">Przychodnia przy Zduńskiej czynna jest w godzinach 8-18 od poniedziałku do piątku.</p>
+		</details>
+
+		<details class="group border-s-4 border-green-500 bg-gray-50 p-6 [&_summary::-webkit-details-marker]:hidden">
+			<summary class="flex cursor-pointer items-center justify-between gap-1.5">
+				<h2 class="text-lg font-medium text-gray-900">Potrzebuję tylko recepty...</h2>
+				<span class="shrink-0 rounded-full bg-white p-1.5 text-gray-900 sm:p-3">
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0 transition duration-300 group-open:-rotate-45" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+					</svg>
+				</span>
+			</summary>
+			<p class="mt-4 leading-relaxed text-gray-700">Pewnie, od tego właśnie jest ten serwis. Zacznij od wpisania PESELu a skończymy na teleporadzie udzielonej w formie rozmowy telefonicznej podczas której z chęcia rozwiążemy Twoj problem medyczny</p>
+		</details>
 	</div>
 </div>

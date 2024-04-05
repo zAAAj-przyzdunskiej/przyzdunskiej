@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs';
 import { signJWT } from '$lib/server/token.js';
-import { JWT_EXPIRES_IN, GSM_LOGIN, GSM_PASS, GSM_URL } from '$env/static/private';
+import { JWT_EXPIRES_IN, GSM_LOGIN, GSM_PASS, GSM_URL, PINCODE_EXPIRED_IN } from '$env/static/private';
 import { 
 	PUBLIC_NO_DECLARATION, PUBLIC_UA_NOTACTIVATED, PUBLIC_WRONG_CREDENTIALS, PUBLIC_MSG_PASSWORD, PUBLIC_UA_SUCCEED, PUBLIC_UA_SUCCEED_BUT_SMS,
-	PUBLIC_MISSING_PHONE, PUBLIC_UA_DEACTIVATED } from '$env/static/public';
-import { buildUrlQueryData, getDiff, randomNumber, type Address, type Result, type User, type UserLogin, type UserRegister } from '$lib/utils';
+	PUBLIC_MISSING_PHONE, PUBLIC_UA_DEACTIVATED, PUBLIC_SERVER_ERROR, PUBLIC_UA_EXIST, PUBLIC_PINCODE_EXPIRED } from '$env/static/public';
+import { buildUrlQueryData, getDiff, randomNumber, type Address, type Result, type User, type UserLogin, type UserRegister, type VisitTime, compareVisit, dateToStr, formatTime, convertDbTimestampToDate } from '$lib/utils';
 import { ResultCode } from '$lib/utils';
 import { MyDr, type MyDrUser, type Staff } from './mydr';
 import { insert, select, update } from './db';
@@ -53,7 +53,14 @@ export async function login(data: UserLogin): Promise<Result> {
 		console.log("User account is not active and the password is not set");
 		return { success: false, httpCode: ResultCode.BAD_REQUEST, user: user, 
 			message: PUBLIC_NO_DECLARATION};	
-	}  
+	} 
+	if(data.password.length <= 4 && user.updatedAt) {
+		const now = Date.now();
+		const pswSetTime = convertDbTimestampToDate(user.updatedAt);
+		if(now > pswSetTime.getMilliseconds() +(parseInt(PINCODE_EXPIRED_IN)*60*1000)) {
+			return { success: false, message: PUBLIC_PINCODE_EXPIRED, httpCode: ResultCode.UNAUTHORIZED };
+		}
+	}
 	
 	const pswMatched = await bcrypt.compare(data.password, user.password);
 	if(!pswMatched) {
@@ -71,7 +78,7 @@ async function sendSMS(phoneNumber:string, message: string): Promise<boolean> {
 		login: GSM_LOGIN, pass: GSM_PASS, recipient: phoneNumber, msg_type: 3, message: message
 	});
 	let res = await fetch(urlStr);
-	let ok = res.ok && res.status >= 200 && res.status < 300 ;
+	let ok = res.status >= 200 && res.status < 300 ;
 	if(!ok) {
 		console.log("Message response status code: " + res.status + ", message: " +res.statusText + ". \n" 
 			+ await res.text);
@@ -86,80 +93,112 @@ export async function changePassword(pesel: string, password: string): Promise<U
 	return result.rows.length > 0 ? result.rows[0] : null;
 }
 
-export async function resetPassword(pesel: string) {
+export async function resetPassword(pesel: string): Promise<Result> {
 	let localUser = await getUserByPesel(pesel);
 	if(localUser == null || !localUser.active) {
-		console.log("User account is not found or inactive: pesel=" + pesel);
-		return { success: false, httpCode: ResultCode.BAD_REQUEST, 
-			message: PUBLIC_UA_DEACTIVATED};
+		let result = await checkUA(localUser, pesel);
+		if(!result.success) {
+			console.log("User account is not found or inactive: pesel=" + pesel);
+			return { success: false, httpCode: ResultCode.BAD_REQUEST, 
+				message: PUBLIC_WRONG_CREDENTIALS};
+			
+		} 
+		return result;
 	}
 	if(!localUser.telephone) {
 		console.log("Can not reset password, telephone is not registered: pesel=" + pesel);
 		return { success: false, httpCode: ResultCode.BAD_REQUEST, 
 			message: PUBLIC_MISSING_PHONE};
 	}
+	return resetPsw(pesel);
+}
+async function resetPsw(pesel: string): Promise<Result> {
 	let psw = randomNumber(4).toString();
 	let hashed = await bcrypt.hash(psw, 12);
-	localUser = await updateUser({pesel: pesel, password: hashed}) as User;
+	let localUser = await updateUser({pesel: pesel, password: hashed}) as User;
 	console.log(psw + " HASH = " + hashed + " , Updated: " + localUser.password);
 	if(! (await sendSMS(localUser.telephone, PUBLIC_MSG_PASSWORD + ":  " + psw))) {
 		return { success: true, httpCode: ResultCode.OK, user: localUser,
+			resultCode: "UA_SUCCEED_BUT_SMS",
 			message: PUBLIC_UA_SUCCEED_BUT_SMS}
 	}
-	return { success: true, httpCode: ResultCode.OK, message: PUBLIC_UA_SUCCEED}
-
+	return { success: true, httpCode: ResultCode.OK, user: localUser, 
+		message: PUBLIC_UA_SUCCEED, 
+		resultCode: "UA_SUCCEED",
+		phone: localUser.telephone}
 }
 export async function tryRegister(pesel: string): Promise<Result> {
 	let localUser = await getUserByPesel(pesel);
-
-	if(localUser != null) {
-		if(localUser.active) {
-			console.log("User account is already exist and active")
-			return { success: false, httpCode: ResultCode.BAD_REQUEST, user: localUser, 
-				message: PUBLIC_UA_NOTACTIVATED}
-		} 
-		console.log("User account already exist but not active: no receive 'Declaration of choice??");
-		return { success: false, httpCode: ResultCode.BAD_REQUEST, user: localUser, 
-			message: PUBLIC_NO_DECLARATION};
-	}
-
-	let myDrUser: MyDrUser|null = await MyDr.newInstance()
-				.then(myDr => myDr.getOnePatient({pesel: pesel, active: true})); 
-	if(myDrUser != null) {
-		if(myDrUser.registration_address) {
-			let address:Address = myDrUser.registration_address;
-			saveAddress(address);
-			myDrUser.registration_address_id = address.id;
-			if(!myDrUser.zipcode && address.postal_code) {
-				myDrUser.zipcode = address.postal_code;
-			}
-		}
-		if(myDrUser.residence_address) {
-			let address:Address = myDrUser.residence_address;
-			saveAddress(address);
-			myDrUser.registration_address_id = address.id;
-			if(!myDrUser.zipcode && address.postal_code) {
-				myDrUser.zipcode = address.postal_code;
-			}
-		}
-		if(!myDrUser.zipcode) {
-			myDrUser.zipcode = "_NA_";
-		}
-		const {residence_address, registration_address, ...newUser} = myDrUser;
-		let psw = randomNumber(4).toString();
-		newUser.password = await bcrypt.hash(psw, 12);
-		//console.log(JSON.stringify(newUser));
-		localUser = await createUser(newUser) as User;
-		//console.log(psw);
-		if(! (await sendSMS(localUser.telephone, PUBLIC_MSG_PASSWORD + psw))) {
-			return { success: true, httpCode: ResultCode.OK, user: localUser,
-				message: PUBLIC_UA_SUCCEED_BUT_SMS}
-		}
-		return { success: true, httpCode: ResultCode.OK, user: localUser,
-			message: PUBLIC_UA_SUCCEED}
-	}
-	return { success: false, httpCode: ResultCode.OK, message: PUBLIC_NO_DECLARATION, waitingUser:{pesel: pesel}}
+	return checkUA(localUser, pesel);
 }
+export async function checkUA(localUser: User|null, pesel: string): Promise<Result> {
+	if(localUser != null && localUser.id && localUser.active) {
+		console.log("User account is already exist and active")
+		return { success: true, httpCode: ResultCode.OK, user: localUser, 
+			message: PUBLIC_UA_EXIST, resultCode: "UA_EXIST"}	
+	}
+	const myDr = await MyDr.newInstance();
+	let myDrUser: MyDrUser|null = null;
+	if(localUser != null && localUser.id) {
+		myDrUser = await myDr.getPatientByPk(localUser.id);
+		if(myDrUser?.active) {
+			let declr = await myDr.getOneDeclaration(localUser.id);
+			myDrUser.active = (declr != null)
+		}
+	} else {
+		myDrUser = await myDr.getOnePatient({pesel: pesel, active: true}); 
+	}
+	if(myDrUser == null || !myDrUser.active) {
+		console.log("MyDr account does not exist or not active: no receive 'Declaration of choice??");
+		const result:Result = { success: false, httpCode: ResultCode.BAD_REQUEST, message: PUBLIC_NO_DECLARATION, resultCode: "NO_DECLARATION"}
+		if(localUser) {
+			result.user = localUser;
+		} else {
+			result.waitingUser = {pesel: pesel}
+		}
+		return result;
+	}
+
+	let phone = null;
+	if(localUser != null && localUser.telephone) {
+		phone = localUser.telephone;
+	}
+
+	if(myDrUser.registration_address) {
+		let address:Address = myDrUser.registration_address;
+		saveAddress(address);
+		myDrUser.registration_address_id = address.id;
+		if(!myDrUser.zipcode && address.postal_code) {
+			myDrUser.zipcode = address.postal_code;
+		}
+	}
+	if(myDrUser.residence_address) {
+		let address:Address = myDrUser.residence_address;
+		saveAddress(address);
+		myDrUser.registration_address_id = address.id;
+		if(!myDrUser.zipcode && address.postal_code) {
+			myDrUser.zipcode = address.postal_code;
+		}
+	}
+	if(!myDrUser.zipcode) {
+		myDrUser.zipcode = "_NA_";
+	}
+	const {residence_address, registration_address, ...newUser} = myDrUser;
+	if(phone) {
+		newUser.telephone = phone;
+	}
+	let psw = randomNumber(4).toString();
+	newUser.password = await bcrypt.hash(psw, 12);
+	//console.log(JSON.stringify(newUser));
+	localUser = await createUser(newUser) as User;
+	//console.log(psw);
+	if(! (await sendSMS(localUser.telephone, PUBLIC_MSG_PASSWORD + psw))) {
+		return { success: true, httpCode: ResultCode.OK, user: localUser,
+			message: PUBLIC_UA_SUCCEED_BUT_SMS, resultCode: "UA_SUCCEED_BUT_SMS"}
+	}
+	return { success: true, httpCode: ResultCode.OK, user: localUser, message: PUBLIC_UA_SUCCEED, resultCode: "UA_SUCCEED"}
+}
+	
 export async function register(userInfo: UserRegister): Promise<Result> {
 	let result = await tryRegister(userInfo.pesel);
 	if(result.success) {
@@ -186,6 +225,67 @@ export async function getDoctor(id: number): Promise<Staff|null> {
 		globalThis.doctors.set(doctor.id as number, doctor);
 	}
 	return doctor;
+}
+function addVisit(visits: VisitTime[], newVisit: VisitTime) {
+    const lastIdx = visits.length - 1
+    let index = lastIdx;
+    for(; index >= 0 && compareVisit(visits[index], newVisit) > 0; index--);
+    if(index == lastIdx) {
+        visits.push(newVisit);
+    } else {
+        visits.splice(index + 1, 0, newVisit);
+    }
+}
+function addVisitDecr(visits: VisitTime[], newVisit: VisitTime) {
+    const lastIdx = visits.length - 1
+    let index = 0;
+    for(; index < visits.length && compareVisit(visits[index], newVisit) > 0; index++);
+    if(index == lastIdx) {
+        visits.push(newVisit);
+    } else {
+        visits.splice(index, 0, newVisit);
+    }
+}
+
+export async function getVisits(userId:string, page?: string|null, page_size?: string|null): Promise<Result> {
+	let queryData:any = null;
+	if(page && page_size) {
+		queryData = {page: page, page_size:page_size}
+	}
+	const today = new Date();
+	const nowTimeStr = today.getHours().toString().padStart(2, '0') + 
+			":" + today.getMinutes().toString().padStart(2, '0');
+	const nowDateStr = dateToStr(today);
+	try {
+        const myDr = await MyDr.newInstance();
+        const visitGetter = await myDr.newVisitGetter(userId, queryData);
+        const upcoming:VisitTime[] = [], past:VisitTime[] = [];
+        for (const visit of visitGetter.results) {
+            const state = visit.state;
+            if(!state || state == "Usunięta" || state == "Anulowana") {
+                continue;
+            }
+
+            const doctorObj = await getDoctor(visit.doctor);
+            //console.log("getDoctor id=" + visit.doctor + ", return " + (doctorObj ? doctorObj.first_name : "null"));
+            const doctorName = doctorObj ? doctorObj.first_name + " " + doctorObj.last_name : "";
+            const {patient, doctor, office, visit_type, latest_modification, ...tmp} = visit;
+            const retVisit: VisitTime = {doctor: doctorName, ...tmp};
+            retVisit.timeFrom = formatTime(retVisit.timeFrom);
+            retVisit.timeTo = formatTime(retVisit.timeTo);
+            
+            let cmp = compareVisit(retVisit, {date: nowDateStr, timeFrom: nowTimeStr});
+            if(cmp > 0) {
+                addVisit(upcoming, retVisit)
+            } else {
+                addVisitDecr(past, retVisit)
+            }
+        }
+        return {success: true, httpCode: 200, message: "ok", pastVisits: past, upcomingVisits: upcoming};
+    } catch (error: any) {
+		console.log("Failed to get visits " + error);
+        return {success: false, httpCode: 500, message: PUBLIC_SERVER_ERROR};
+    }
 }
 async function updateMyDr(userInfo: UserRegister, myDrUser: User): Promise<User> {
 	const myDr = await MyDr.newInstance();

@@ -82,14 +82,14 @@ export async function insert(tableName: string, record: object):Promise<QResult>
     return {error: error, rows: rows};
 }
 export async function update(tableName: string, record: object, where: object):Promise<QResult>  {
-    let sql = "UPDATE \"" + tableName + "\" SET ";
+    let sql = "UPDATE \"" + tableName + "\" SET updatedAt = to_timestamp(" + Date.now()/1000 + ")";
 
 	Object.entries(record).forEach(([key, value]) => {
         if(key && value) {
-            sql = sql + key + " = " + pg.escapeLiteral(value) + ", ";
+            sql = sql + ", " + key + " = " + pg.escapeLiteral(value);
         }
 	});
-    sql = sql.slice(0, sql.length - 2) + " WHERE ";
+    sql = sql + " WHERE ";
 	Object.entries(where).forEach(([key, value]) => {
         if(key && value) {
             sql = sql + key + " = " + pg.escapeLiteral(value) + " AND ";
