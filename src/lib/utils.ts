@@ -133,6 +133,13 @@ export function formatTime(timeStr: string| undefined): string {
     }
     return timeStr;
 }
+export function getTimeStampStr(date: Date, dtSep?:string|null):string {
+	if(!dtSep) {
+		dtSep = " ";
+	}
+	const dateStr = dateToStr(date);
+	return dateStr + dtSep + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+}
 export function compareVisit(lVisit: VisitTime, rVisit: VisitTime): number {
     let right = rVisit.date, left = lVisit.date;
     if(right == left) {
@@ -544,5 +551,5 @@ export const userRegisterSchema: z.ZodType<UserRegister> = z
 	// });
 export type RegisterUserInput = z.infer<typeof userRegisterSchema>;
 export function convertDbTimestampToDate(dbTimestamp: string) {
-	return new Date(dbTimestamp.replace(' ', 'T'));
+	return new Date(dbTimestamp);
 }

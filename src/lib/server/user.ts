@@ -55,7 +55,7 @@ export async function login(data: UserLogin): Promise<Result> {
 			message: PUBLIC_NO_DECLARATION};	
 	} 
 	if(data.password.length <= 4 && user.updatedAt) {
-		const now = Date.now();
+		const now = (new Date()).getMilliseconds();
 		const pswSetTime = convertDbTimestampToDate(user.updatedAt);
 		if(now > pswSetTime.getMilliseconds() +(parseInt(PINCODE_EXPIRED_IN)*60*1000)) {
 			return { success: false, message: PUBLIC_PINCODE_EXPIRED, httpCode: ResultCode.UNAUTHORIZED };
@@ -110,12 +110,9 @@ export async function resetPassword(pesel: string): Promise<Result> {
 		return { success: false, httpCode: ResultCode.BAD_REQUEST, 
 			message: PUBLIC_MISSING_PHONE};
 	}
-	return resetPsw(pesel);
-}
-async function resetPsw(pesel: string): Promise<Result> {
 	let psw = randomNumber(4).toString();
 	let hashed = await bcrypt.hash(psw, 12);
-	let localUser = await updateUser({pesel: pesel, password: hashed}) as User;
+	localUser = await updateUser({pesel: pesel, password: hashed}) as User;
 	console.log(psw + " HASH = " + hashed + " , Updated: " + localUser.password);
 	if(! (await sendSMS(localUser.telephone, PUBLIC_MSG_PASSWORD + ":  " + psw))) {
 		return { success: true, httpCode: ResultCode.OK, user: localUser,
