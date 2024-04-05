@@ -218,27 +218,29 @@
 	<div class="container mx-0 flex flex-wrap items-start py-2 md:py-8 md:pl-5">
 		{#if $upcomingVisits.length > 0}
 		<div class="w-full pr-0">
-			<div class="container pb-6 pt-9">
+			<div class="container pt-9">
 				<div class="-my-8 px-3">
-					<h2 class="title-font border-b-2 border-gray-600 text-lg font-medium text-gray-900 dark:border-gray-200 dark:text-gray-100">Nadchodząca wizyta</h2>
+					<h2 class="title-font border-b-2 border-gray-600 text-lg font-medium text-gray-900 dark:border-gray-200 dark:text-gray-100">
+						Nadchodząca wizyta <i class=" font-light text-sm">(Jeżeli chcesz zmienić rezerwację ANULUJ poprzednią wizytę)</i>
+					</h2>
 						{#each $upcomingVisits as visit}
-							<div class="flex flex-nowrap border-b border-gray-600 md:flex-nowrap">
-								<div class="flex flex-shrink-0 flex-col sm:max-w-1/3 md:w-48">
-									<span class="text-sm font-semibold text-gray-700 dark:text-gray-100">{visit.date}</span>
-									<span class="mt-1 text-sm text-gray-500 dark:text-gray-200">{visit.timeFrom} - {visit.timeTo}</span>
-								</div>
-								<div class="w-full md:flex-grow pl-4 md:pl-6">
-									<span class="text-sm font-semibold text-gray-700 dark:text-gray-100">{visit.doctor}</span>
-									<div class="flex w-full flex-nowrap items-stretch">
-										<p class="leading-relaxed">Status: {visit.state}</p>
-										<button
-											on:click={(_) => {
-												cancelVisit(visit.id);
-											}}
-											class="ml-auto -mt-1 mb-1 align-top rounded border-0 bg-blue-500 px-1 py-1 text-white hover:bg-primary focus:outline-none">Anulować</button>
-									</div>
-								</div>
+					<div class="flex flex-nowrap border-b border-gray-600 md:flex-nowrap">
+						<div class="flex flex-shrink-0 flex-col sm:max-w-1/3 md:w-48">
+							<span class="text-sm font-semibold text-gray-700 dark:text-gray-100">{visit.date}</span>
+							<span class="mt-1 text-sm text-gray-500 dark:text-gray-200">{visit.timeFrom} - {visit.timeTo}</span>
+						</div>
+						<div class="w-full md:flex-grow pl-4 md:pl-6">
+							<span class="text-sm font-semibold text-gray-700 dark:text-gray-100">{visit.doctor}</span>
+							<div class="flex w-full flex-nowrap items-stretch">
+								<p class="leading-relaxed">Status: {visit.state}</p>
+								<button
+									on:click={(_) => {
+										cancelVisit(visit.id);
+									}}
+									class="ml-auto -mt-1 mb-1 align-top rounded border-0 bg-blue-500 px-1 py-1 text-white hover:bg-primary focus:outline-none">Anulować</button>
 							</div>
+						</div>
+					</div>
 						{/each}
 					<!-- {:else}
 						<div class="flex flex-nowrap border-b border-gray-600 md:flex-nowrap">
@@ -249,6 +251,10 @@
 						</div> -->
 				</div>
 			</div>
+			<!-- <div class="container px-3 pt-9 pb-6">
+				<span class="text-pretty text-lg text-gray-900 dark:text-gray-100">Masz zarezerwowną wizytę u lekarza.
+					Jeżeli chcesz zmienić rezerwację ANULUJ poprzednią wizytę</span>
+			</div> -->
 		</div>
 		{/if}
 		{#if $upcomingVisits.length == 0}
