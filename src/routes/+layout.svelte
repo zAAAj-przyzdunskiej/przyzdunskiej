@@ -31,11 +31,6 @@
 						<ul class="space-y-6 text-base font-medium tracking-wide lg:flex lg:space-y-0 lg:text-sm">
 							{#if !data.hasToken}
 							<li>
-								<a href="/register" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
-									<span>Załóż konto</span>
-								</a>
-							</li>
-							<li>
 								<a href="/login" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
 									<span>Zaloguj się</span>
 								</a>
