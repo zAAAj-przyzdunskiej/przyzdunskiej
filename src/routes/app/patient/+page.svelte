@@ -37,7 +37,7 @@
 		{
 			q: 'Proszę podaj na jakie leki potrzebujsz receptę w każdym przypadku wyszczególnij:',
 			a: null,
-			hint: ' ',
+			hint: 'Nazwa leku, dawka, jak często, ilość opak',
 			required: false,
 			applicable: true,
 			numLines: 3
@@ -69,7 +69,7 @@
 		},
 		{
 			q: 'Czy palisz papierosy? Tradycyjne? Jak dużo dziennie?',
-			a: '> 10 sztuk na dzień',
+			a: 'Nie palę!',
 			hint: ' ',
 			required: true,
 			applicable: true,
@@ -263,6 +263,21 @@
 				<h2 class="title-font mb-2 px-3 text-lg font-medium text-gray-900">Wypełnij formularz e-wizyty</h2>
 				<div class="flex w-full flex-wrap items-stretch">
 					<div class="w-full flex-row px-3 md:w-1/2">
+						{#if isWomen}
+						<div class="flex w-full">
+							<label for="department" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty chcesz?</label>
+							<ul class="flex-row pl-12">
+								<li>
+									<input type="radio" bind:group={departmentId} name="department" id="dep1" value="49435" checked/>
+									<label for="dep1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
+								</li>
+								<li>
+									<input type="radio" bind:group={departmentId} name="department" id="dep2" value="50615"/>
+									<label for="dep2" class="text-sm leading-7 text-gray-600">Ginekolog</label>
+								</li>
+							</ul>
+						</div>
+						{/if}
 					{#each qas as qa, i}
 						{#if qa.applicable}
 							<input type="hidden" name="q{i}" value={qa.q} />
@@ -296,21 +311,6 @@
 					{/each}
 					</div>
 					<div class="w-full px-3 md:w-1/2">
-						{#if isWomen}
-						<div class="flex w-full">
-							<label for="department" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty chcesz?</label>
-							<ul class="flex-row pl-12">
-								<li>
-									<input type="radio" bind:group={departmentId} name="department" id="dep1" value="49435" checked/>
-									<label for="dep1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
-								</li>
-								<li>
-									<input type="radio" bind:group={departmentId} name="department" id="dep2" value="50615"/>
-									<label for="dep2" class="text-sm leading-7 text-gray-600">Ginekolog</label>
-								</li>
-							</ul>
-						</div>
-						{/if}
 						<div class="flex w-full">
 							<label for="visitDate" class="flex-row text-sm leading-7 text-gray-600">Wybierz datę wizyty: </label>
 							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="float-left ml-3 w-24 flex-row rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
