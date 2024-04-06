@@ -4,12 +4,13 @@ import { ResultCode } from '$lib/utils.js';
 import { json } from '@sveltejs/kit';
 
 export async function GET({ locals, url }) {
-    const visitDate = url.searchParams.get("visitDate");
+    const visitDate = url.searchParams.get("visitDate"); 
     if(!visitDate) {
         return json({success: false, httpCode: ResultCode.BAD_REQUEST, message: PUBLIC_MISSING_DATE});
     }
+    const department = url.searchParams.get("department"); //department
     const myDr = await MyDr.newInstance();
-    const res = await myDr.getFreeSlots(visitDate);
+    const res = await myDr.getFreeSlots(visitDate, department);
     const slots = res.slots;
     for(const slot of slots) {
         delete slot.private_services_custom_indexes;

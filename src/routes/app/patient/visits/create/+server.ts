@@ -12,6 +12,7 @@ const visitSchema: z.ZodType<Visit> = z.object({
     date: z.string({required_error: "Biuro nie zostało wybrane"}),
     timeFrom: z.string({required_error: "Godzina spotkania nie została wybrana"}),
     timeTo: z.string({required_error: "Godzina spotkania nie została wybrana"}),
+    interview: z.string({required_error: "Proszę wypełnić wszystkie wymagane pola."}),
     visit_kind: z.nativeEnum(VisitKind).optional()
 });
 export async function POST({ request, locals, cookies }) {

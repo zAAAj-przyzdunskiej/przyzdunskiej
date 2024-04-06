@@ -18,14 +18,14 @@
 	const isWomen = data.isWomen || false;
 
 	const qas = [
-		{
-			q: 'Jakiego rodzaju wizyty chcesz?',
-			a: 'Lekarz rodzinny',
-			hint: '',
-			required: true,
-			applicable: isWomen,
-			options: ['Lekarz rodzinny', 'Ginekolog']
-		},
+		// {
+		// 	q: 'Jakiego rodzaju wizyty chcesz?',
+		// 	a: 'Lekarz rodzinny',
+		// 	hint: '',
+		// 	required: true,
+		// 	applicable: isWomen,
+		// 	options: ['Lekarz rodzinny', 'Ginekolog']
+		// },
 		{
 			q: 'Opisz w kilku zdaniach swój problem zdrowotny.',
 			a: null,
@@ -91,6 +91,7 @@
 		}
 	];
 
+	let departmentId = "49435";
 	let dateVal: Date | null = null;
 	let initial = true;
 
@@ -100,7 +101,7 @@
 		}
 		let visitDate: string = dateToStr(dateVal);
 		//alert(visitDate);
-		const response = await fetch('/app/patient/visits/slots?ajax=true&visitDate=' + visitDate);
+		const response = await fetch('/app/patient/visits/slots?ajax=true&visitDate=' + visitDate + "&department=" + departmentId);
 		const resObj = await response.json();
 		if(!resObj.success) {
 			alert(resObj.message);
@@ -295,6 +296,21 @@
 					{/each}
 					</div>
 					<div class="w-full px-3 md:w-1/2">
+						{#if isWomen}
+						<div class="flex w-full">
+							<label for="department" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty chcesz?</label>
+							<ul class="flex-row pl-12">
+								<li>
+									<input type="radio" bind:group={departmentId} name="department" id="dep1" value="49435" checked/>
+									<label for="dep1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
+								</li>
+								<li>
+									<input type="radio" bind:group={departmentId} name="department" id="dep2" value="50615"/>
+									<label for="dep2" class="text-sm leading-7 text-gray-600">Ginekolog</label>
+								</li>
+							</ul>
+						</div>
+						{/if}
 						<div class="flex w-full">
 							<label for="visitDate" class="flex-row text-sm leading-7 text-gray-600">Wybierz datę wizyty: </label>
 							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="float-left ml-3 w-24 flex-row rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />

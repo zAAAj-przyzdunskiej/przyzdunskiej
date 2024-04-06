@@ -284,8 +284,12 @@ export class MyDr {
     //     //delete result.pesel;
     //     return result;
     // }
-    async getFreeSlots(date: string) {
-        const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData({date_from: date, date_to: date, visit_duration: 10});
+    async getFreeSlots(date: string, department?: string|null) {
+        const queryObj:{[key:string]:any} = {date_from: date, date_to: date, visit_duration: 10};
+        if(department) {
+            queryObj.department = department;
+        }
+        const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData(queryObj);
         const reqInit: RequestInit = {
             method: "GET",
             headers: this.headers
