@@ -55,7 +55,7 @@ CREATE TABLE "User" (
     "registration_address_id" INTEGER,
     "residence_address_id" INTEGER,
     "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3),
+    "updatedAt" TIMESTAMP(3)DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("pesel")
 );

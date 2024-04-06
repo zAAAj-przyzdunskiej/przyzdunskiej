@@ -71,7 +71,7 @@
 						<div role="status" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-e-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
 						<span>Ładowanie...</span>
 						{:else if $countDown > 0}
-						<i>Wysłać hasło ponownie? Proszę czekać {$countDown} seconds...</i>
+						<i>Wysłać hasło ponownie? Proszę czekać {$countDown} sekund...</i>
 						{:else}
 						<span class="uppercase ">Otrzymaj hasło SMS-em</span>
 						{/if}
