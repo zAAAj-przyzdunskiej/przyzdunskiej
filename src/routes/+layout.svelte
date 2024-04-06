@@ -41,11 +41,11 @@
 									<span>Panel</span>
 								</a>
 							</li>
-							<li>
+							<!-- <li>
 								<a href="/app/changePsw" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
 									<span>Zmień hasło</span>
 								</a>
-							</li>
+							</li> -->
 							<li>
 								<a href="/app/logout" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
 									<span>Wyloguj się</span>

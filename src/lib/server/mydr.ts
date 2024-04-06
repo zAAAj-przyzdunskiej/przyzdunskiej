@@ -2,6 +2,11 @@ import {MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD} 
 import { ResultCode, type Result, removeNulls, buildUrlQueryData, type Address, type User } from '$lib/utils';
 import { boolean, date, number, z } from 'zod';
 
+const officeDepartment:{[key:string]: string} = {
+    "58155": "49435",
+    "58210": "50615"
+}
+
 export interface MyDrUser extends User {
     residence_address?: Address;
     registration_address?: Address;
@@ -284,11 +289,18 @@ export class MyDr {
     //     //delete result.pesel;
     //     return result;
     // }
-    async getFreeSlots(date: string, department?: string|null) {
+    async getFreeSlots(date: string, office?: string|null, department?: string|null) {
         const queryObj:{[key:string]:any} = {date_from: date, date_to: date, visit_duration: 10};
-        if(department) {
+        if(office) {
+            //queryObj.office = office;
+            let dep = officeDepartment[office] || department;
+            if(dep) {
+                queryObj.department = dep;
+            }
+        } else if(department) {
             queryObj.department = department;
         }
+
         const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData(queryObj);
         const reqInit: RequestInit = {
             method: "GET",
@@ -306,7 +318,20 @@ export class MyDr {
         }
         
         const data = (await res.json());
-        return {success: true, httpCode: ResultCode.OK, message: "OK", doctors: data.doctors, departments: data.departments, slots: data.results};
+        let results;
+        if(!office) {
+            results = data.results;
+        } else {
+            results = [];
+            const numResult = data.results ? data.results.length : 0;
+            for(let i = 0; i < numResult; i++) {
+                if(data.results[i].office == office) {
+                    results.push(data.results[i]);
+                }
+            }
+        }
+
+        return {success: true, httpCode: ResultCode.OK, message: "OK", doctors: data.doctors, departments: data.departments, slots: results};
     }
     async makeAppointment(visit: Visit):Promise<Result> {
         let url = MYDR_URL + "/visits/";

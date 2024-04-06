@@ -8,9 +8,12 @@ export async function GET({ locals, url }) {
     if(!visitDate) {
         return json({success: false, httpCode: ResultCode.BAD_REQUEST, message: PUBLIC_MISSING_DATE});
     }
-    const department = url.searchParams.get("department"); //department
+    const office = url.searchParams.get("office"); //department
     const myDr = await MyDr.newInstance();
-    const res = await myDr.getFreeSlots(visitDate, department);
+    const res = await myDr.getFreeSlots(visitDate, office);
+    if(!res.success) {
+        return json(res);
+    }
     const slots = res.slots;
     for(const slot of slots) {
         delete slot.private_services_custom_indexes;

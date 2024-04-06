@@ -91,17 +91,27 @@
 		}
 	];
 
-	let departmentId = "49435";
+	let officeId = "58155";
+	const storeOfficeId = writable(officeId);
+	storeOfficeId.subscribe((value) => { 
+		//alert(officeId + " --> " + value);
+		if(officeId != value) { 
+			officeId = value; 
+			handler.invalidate();
+		}
+	});
 	let dateVal: Date | null = null;
 	let initial = true;
 
 	const reloadSlots = async () => {
 		if (dateVal === null) {
+			//alert("dateVal is null")
 			return [];
 		}
 		let visitDate: string = dateToStr(dateVal);
 		//alert(visitDate);
-		const response = await fetch('/app/patient/visits/slots?ajax=true&visitDate=' + visitDate + "&department=" + departmentId);
+		//alert("requesting server for slots" + '/app/patient/visits/slots?ajax=true&visitDate=' + visitDate + "&office=" + officeId)
+		const response = await fetch('/app/patient/visits/slots?ajax=true&visitDate=' + visitDate + "&office=" + officeId);
 		const resObj = await response.json();
 		if(!resObj.success) {
 			alert(resObj.message);
@@ -148,7 +158,7 @@
 		let interview = '';
 		let missingMandatory = false
 		for (let i = 0; i < qas.length; i++) {
-			interview = interview + ' - Pytanie: ' + qas[i].q + '\n  - Odpowiedź: ' + (qas[i].a || '') + '\n';
+			interview = interview + ' ++ ' + qas[i].q + '\n -- ' + (qas[i].a || '') + '\n';
 			if(!missingMandatory && qas[i].required && (!qas[i].a || qas[i].a == '')) {
 				missingMandatory = true
 			}
@@ -265,15 +275,15 @@
 					<div class="w-full flex-row px-3 md:w-1/2">
 						{#if isWomen}
 						<div class="flex w-full">
-							<label for="department" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty chcesz?</label>
+							<label for="office" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty chcesz?</label>
 							<ul class="flex-row pl-12">
 								<li>
-									<input type="radio" bind:group={departmentId} name="department" id="dep1" value="49435" checked/>
-									<label for="dep1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
+									<input type="radio" bind:group={$storeOfficeId} name="office" id="office1" value="58155" checked/>
+									<label for="office1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
 								</li>
 								<li>
-									<input type="radio" bind:group={departmentId} name="department" id="dep2" value="50615"/>
-									<label for="dep2" class="text-sm leading-7 text-gray-600">Ginekolog</label>
+									<input type="radio" bind:group={$storeOfficeId} name="office" id="office2" value="58210"/>
+									<label for="office2" class="text-sm leading-7 text-gray-600">Ginekolog</label>
 								</li>
 							</ul>
 						</div>

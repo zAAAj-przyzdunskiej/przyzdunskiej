@@ -35,6 +35,9 @@ export async function POST({ request, locals, cookies }) {
     visit.patient = user.id;
     visit.state = "Zaplanowana";
     visit.confirmed = true;
+    visit.note = "online";
+    visit.examination = `odbyto teleporadę w formie rozmowy telefonicznej \n
+    zweryfikowano dane osobowe - pacjent przedstawił się, podał date urodzenia - zgodna z PESEL`;
     visit.visit_kind = VisitKind.NFZ;
     visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
     const myDr = await myDrPromise;

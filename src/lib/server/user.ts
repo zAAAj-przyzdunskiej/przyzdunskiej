@@ -55,9 +55,14 @@ export async function login(data: UserLogin): Promise<Result> {
 			message: PUBLIC_NO_DECLARATION};	
 	} 
 	if(data.password.length <= 4 && user.updatedAt) {
-		const now = (new Date()).getMilliseconds();
+		const now = Date.now();
+		console.log("Today, now is: " + now.toString());
 		const pswSetTime = convertDbTimestampToDate(user.updatedAt);
-		if(now > pswSetTime.getMilliseconds() +(parseInt(PINCODE_EXPIRED_IN)*60*1000)) {
+		console.log("Password set time is: " + pswSetTime.getTime());
+
+		const maxAge = (parseInt(PINCODE_EXPIRED_IN)*60*1000);
+		console.log("Max-age = " + maxAge + " miliseconds");
+		if(now > pswSetTime.getTime() +(parseInt(PINCODE_EXPIRED_IN)*60*1000)) {
 			return { success: false, message: PUBLIC_PINCODE_EXPIRED, httpCode: ResultCode.UNAUTHORIZED };
 		}
 	}
