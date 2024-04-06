@@ -37,7 +37,7 @@
 		{
 			q: 'Proszę podaj na jakie leki potrzebujsz receptę w każdym przypadku wyszczególnij:',
 			a: null,
-			hint: '',
+			hint: ' ',
 			required: false,
 			applicable: true,
 			numLines: 3
@@ -70,7 +70,7 @@
 		{
 			q: 'Czy palisz papierosy? Tradycyjne? Jak dużo dziennie?',
 			a: '> 10 sztuk na dzień',
-			hint: '',
+			hint: ' ',
 			required: true,
 			applicable: true,
 			options: ['Nie palę!', '< 10 sztuk na dzień ', '> 10 sztuk na dzień']
@@ -78,14 +78,14 @@
 		{
 			q: 'Przybliżona waga ciała w kg',
 			a: null,
-			hint: '',
+			hint: ' ',
 			required: true,
 			applicable: true
 		},
 		{
 			q: 'Przybliżony wzrost w cm',
 			a: null,
-			hint: '',
+			hint: ' ',
 			required: true,
 			applicable: true
 		}
