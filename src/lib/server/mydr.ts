@@ -201,14 +201,14 @@ export class MyDr {
         let declraration: Declaration|null = null;
         await getter.forEach((declrs: Declaration[], _) => {
             for(let declr of declrs) {
-                if(!declr.deletion_date) {
+                if(!declr.deletion_date || declr.deletion_date === null || declr.deletion_date.length === 0) {
                     declraration = declr;
                     break;
                 }
             }
-            return declraration == null; //return continuation condition
+            return declraration === null; //return continuation condition
         });
-        return declraration ? declraration : null;
+        return declraration;
     }
     async getStaffByPk(id: string | number, role: ("doctors" | "nurses" | "receptionists") ): Promise<Staff|null> {
         const urlStr = MYDR_URL + "/" + role + "/" + id.toString();
