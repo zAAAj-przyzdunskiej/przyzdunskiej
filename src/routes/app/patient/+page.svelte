@@ -304,14 +304,14 @@
 									</ul>
 								</div>
 							{:else if qa.dateFormat}
-								<div class="flex w-full flex-wrap">
+								<div class="flex w-full flex-row flex-nowrap">
 									<label for="a{i}" class="text-sm leading-7 text-gray-600">{qa.q}</label>
-									<DateInput id="a{i}" bind:value={qa.a} placeholder={qa.hint} required={qa.required} closeOnSelection={true} max={today} format={qa.dateFormat} class="float-left ml-3 w-24 flex-row rounded border border-transparent bg-white" />
+									<DateInput id="a{i}" bind:value={qa.a} placeholder={qa.hint} required={qa.required} closeOnSelection={true} max={today} format={qa.dateFormat} class="float-left ml-auto mr-3 w-24 h-8 flex-row rounded border border-transparent bg-white" />
 								</div>
 							{:else if !qa.numLines}
-								<div class="flex w-full flex-wrap">
+								<div class="flex w-full flex-row flex-nowrap">
 									<label for="a{i}" class="text-sm leading-7 text-gray-600">{qa.q}</label>
-									<input type="number" use:numberValidator={qa.a} bind:value={qa.a} required={qa.required} class="ml-3 mt-1 w-24 flex-row rounded border border-gray-300 bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
+									<input type="number" use:numberValidator={qa.a} bind:value={qa.a} required={qa.required} class="mt-1 w-24  ml-auto rounded border border-gray-300 bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
 								</div>
 							{:else}
 								<label for="a{i}" class="text-sm leading-7 text-gray-600">{qa.q}</label>
@@ -321,9 +321,9 @@
 					{/each}
 					</div>
 					<div class="w-full px-3 md:w-1/2">
-						<div class="flex w-full">
+						<div class="flex flex-row flex-nowrap w-full">
 							<label for="visitDate" class="flex-row text-sm leading-7 text-gray-600">Wybierz datę wizyty: </label>
-							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="float-left ml-3 w-24 flex-row rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
+							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="ml-auto mr-3 w-24 h-8 rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
 						</div>
 						<div class="w-full align-top">
 							<label for="visitTime" class="text-sm leading-7 text-gray-600">Wybierz godzinę wizyty:</label>
