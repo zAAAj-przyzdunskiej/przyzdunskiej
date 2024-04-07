@@ -168,7 +168,7 @@ export async function checkUA(localUser: User|null, pesel: string): Promise<Resu
 
 	if(myDrUser.registration_address) {
 		let address:Address = myDrUser.registration_address;
-		saveAddress(address);
+		await saveAddress(address);
 		myDrUser.registration_address_id = address.id;
 		if(!myDrUser.zipcode && address.postal_code) {
 			myDrUser.zipcode = address.postal_code;
@@ -176,7 +176,7 @@ export async function checkUA(localUser: User|null, pesel: string): Promise<Resu
 	}
 	if(myDrUser.residence_address) {
 		let address:Address = myDrUser.residence_address;
-		saveAddress(address);
+		await saveAddress(address);
 		myDrUser.registration_address_id = address.id;
 		if(!myDrUser.zipcode && address.postal_code) {
 			myDrUser.zipcode = address.postal_code;
