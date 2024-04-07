@@ -274,9 +274,9 @@
 				<div class="flex w-full flex-wrap items-stretch">
 					<div class="w-full flex-row px-3 md:w-1/2">
 						{#if isWomen}
-						<div class="flex w-full">
+						<div class="flex flex-row flex-wrap w-full">
 							<label for="office" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty chcesz?</label>
-							<ul class="flex-row pl-12">
+							<ul class="pl-3">
 								<li>
 									<input type="radio" bind:group={$storeOfficeId} name="office" id="office1" value="58155" checked/>
 									<label for="office1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
@@ -292,9 +292,9 @@
 						{#if qa.applicable}
 							<input type="hidden" name="q{i}" value={qa.q} />
 							{#if qa.options}
-								<div class="flex w-full flex-wrap">
+								<div class="ex flex-row flex-wrap w-full">
 									<label for="a{i}" class="text-sm leading-7 text-gray-600">{qa.q}</label>
-									<ul class="flex-row pl-12">
+									<ul class="pl-3">
 										{#each qa.options as opt, j}
 											<li>
 												<input type="radio" bind:group={qa.a} name="a{i}" id="a{i}{j}" value={opt} required={qa.required} class="invalid:[&:not({initial}):not(:focus)]:border-red-500"/>
