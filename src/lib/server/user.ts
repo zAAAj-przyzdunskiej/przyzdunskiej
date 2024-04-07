@@ -28,8 +28,12 @@ export async function createUser(user: Partial<User>): Promise<User|null> {
 }
 export async function saveAddress(address: Address): Promise<Address|null> {
 	let ins = true;
-	if(address.id) {
-		const qRes = await select("SELECT id FROM \"Address\" WHERE id=$1", [address.id.toString()])
+	const sId = address.id.toString();
+	if(sId.length == 0){
+		address.id = 0;
+	} 
+	if(address.id > 0) {
+		const qRes = await select("SELECT id FROM \"Address\" WHERE id=$1", [sId])
 		if(qRes.rows.length > 0) {
 			ins = false;
 		}
@@ -168,16 +172,20 @@ export async function checkUA(localUser: User|null, pesel: string): Promise<Resu
 
 	if(myDrUser.registration_address) {
 		let address:Address = myDrUser.registration_address;
-		await saveAddress(address);
-		myDrUser.registration_address_id = address.id;
+		let saved = await saveAddress(address);
+		if(saved) {
+			myDrUser.registration_address_id = saved.id;
+		}
 		if(!myDrUser.zipcode && address.postal_code) {
 			myDrUser.zipcode = address.postal_code;
 		}
 	}
 	if(myDrUser.residence_address) {
 		let address:Address = myDrUser.residence_address;
-		await saveAddress(address);
-		myDrUser.registration_address_id = address.id;
+		let saved = await saveAddress(address);
+		if(saved) {
+			myDrUser.residence_address_id = saved.id;
+		}
 		if(!myDrUser.zipcode && address.postal_code) {
 			myDrUser.zipcode = address.postal_code;
 		}
