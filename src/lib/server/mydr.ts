@@ -246,27 +246,37 @@ export class MyDr {
     async getOnePatient(queryData: object): Promise<MyDrUser|null> {
         let getter: MyDrGetter<MyDrUser>|null = await this.newPatientGetter(queryData);
         let user: MyDrUser|null = null;
-        await getter.forEach((patients: MyDrUser[], _) => {
+        await getter.forEach(async (patients: MyDrUser[], _) => {
+            for(let i = 0; i < patients.length; i++) {
+                if(!patients[i].active) continue;
+                let declr = await this.getOneDeclaration(patients[i].id as number);
+                if(declr) {
+                    user = patients[i];
+                    break;
+                } 
+            }
+            return user === null;
             //Query declarations in paralel, if anyone is ok then resolve promise, ignore other queries
-            return new Promise<boolean>((resolve, _) => {
-                let repCount = 0;
-                for(let i = 0; i < patients.length; i++) {
-                    if(!patients[i].active) continue;
-                    this.getOneDeclaration(patients[i].id as number)
-                        .then(declr => {
-                            repCount++;
-                            if(declr) {
-                                if(user == null) user = patients[i];
-                                resolve(false);
-                            } else if(repCount == patients.length) {
-                                resolve(user === null);
-                            }
-                        });
-                    if(user) break;
-                }
-                resolve(repCount == patients.length && user === null);
-            });
+            // return new Promise<boolean>((resolve, _) => {
+            //     let repCount = 0;
+            //     for(let i = 0; i < patients.length; i++) {
+            //         if(!patients[i].active) continue;
+            //         this.getOneDeclaration(patients[i].id as number)
+            //             .then(declr => {
+            //                 repCount++;
+            //                 if(declr) {
+            //                     if(user === null) user = patients[i];
+            //                     resolve(false);
+            //                 } else if(repCount === patients.length) {
+            //                     resolve(user === null);
+            //                 } //else: continue waiting
+            //             });
+            //         if(user) break;
+            //     }
+            //     resolve(repCount === patients.length && user === null);
+            // });
         });
+        
         return user;
     }
     // async getPatients(pesel: string): Promise<MyDrGetter<MyDrUser>> {
