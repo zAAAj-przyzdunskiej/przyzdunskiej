@@ -201,6 +201,7 @@ export class MyDr {
         let declraration: Declaration|null = null;
         await getter.forEach((declrs: Declaration[], _) => {
             for(let declr of declrs) {
+                console.log("deletion date: " + declr.deletion_date);
                 if(!declr.deletion_date || declr.deletion_date === null || declr.deletion_date.length === 0) {
                     declraration = declr;
                     break;
