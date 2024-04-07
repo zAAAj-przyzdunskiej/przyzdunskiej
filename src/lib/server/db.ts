@@ -15,6 +15,7 @@ function getPool(): Pool {
             database: POSTGRES_DB,
             host: POSTGRES_HOST,
             port: parseInt(POSTGRES_PORT),
+            ssl: true
         });
         globalThis.dbPool.on('error', (err, client) => {
             console.error('Unexpected error on idle client', err);
