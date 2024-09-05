@@ -1,5 +1,6 @@
 <script>
 	import '../app.pcss';
+	import { browser } from '$app/environment';
 	import Logo from '$lib/Logo.svelte';
 	import LogoNfz from '$lib/LogoNFZ.svelte';
 	export let data;
@@ -91,3 +92,6 @@
 		</div>
 	</div>
 </footer>
+{#if browser}
+<script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="8f366847-b2c4-4679-9ffc-8907c1f7cce1" data-blockingmode="auto" type="text/javascript"></script>
+{/if}

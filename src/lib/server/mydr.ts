@@ -1,4 +1,4 @@
-import {MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD} from '$env/static/private'
+import {MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD, MYDR_CURTOKEN_BEARER} from '$env/static/private'
 import { ResultCode, type Result, removeNulls, buildUrlQueryData, type Address, type User } from '$lib/utils';
 import { boolean, date, number, z } from 'zod';
 
@@ -304,7 +304,7 @@ export class MyDr {
         const queryObj:{[key:string]:any} = {date_from: date, date_to: date, visit_duration: 10};
         if(office) {
             //queryObj.office = office;
-            let dep = officeDepartment[office] || department;
+            let dep = [office] || department;
             if(dep) {
                 queryObj.department = dep;
             }
@@ -507,14 +507,7 @@ if(!globalThis.myDrToken) {
     //     scope: "external_api"};
 }
 
-async function initToken() {
-    let reqBody = {
-        grant_type: "password",
-        username: MYDR_USER,
-        password: MYDR_PASSWORD,
-        client_id: MYDR_CLIENT_ID,
-        client_secret: MYDR_CLIENT_SECRET
-    }
+async function requestToken(reqBody: object) {
     let cfgReq = {
         method: "POST",
         headers: {
@@ -524,10 +517,33 @@ async function initToken() {
         body: buildUrlQueryData(reqBody)
     }
     let response = await fetch(tokenUrl, cfgReq);
+    if (response.status < 200 || response.status >= 300) {
+        throw new Error("Network response was not OK, http status " + response.status + ", message: " + (await response.text()));
+    }
+    console.log("Finish fetching token: " + tokenUrl)
+
     let resToken = await response.json() as Token;
     resToken.expires_in = Date.now() + resToken.expires_in * 1000;
-    globalThis.myDrToken = resToken;
-    console.log("Init token: Bearer: ");// + resToken.access_token + ", Refresh: " + resToken.refresh_token)
+    return resToken;
+}
+async function initToken() {
+    let reqBody = {
+        grant_type: "password",
+        username: MYDR_USER,
+        password: MYDR_PASSWORD,
+        client_id: MYDR_CLIENT_ID,
+        client_secret: MYDR_CLIENT_SECRET
+    }
+    globalThis.myDrToken = await requestToken(reqBody);
+}
+async function initToken4Test() {
+    globalThis.myDrToken = {
+        expires_in: Date.now() + 3600000,
+        access_token: MYDR_CURTOKEN_BEARER,
+        token_type: "Bearer",
+        scope: "external_api",
+        refresh_token: "J45zGtNpkdpGhsqwaOjU6nz0Klzrhb"
+    }
 }
 async function refreshToken() {
 
@@ -537,26 +553,7 @@ async function refreshToken() {
         client_id: MYDR_CLIENT_ID,
         client_secret: MYDR_CLIENT_SECRET
     }
-
-    let cfgReq = {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            'Accept': 'application/json'
-        },
-        body: buildUrlQueryData(reqBody)
-    }
-    //console.log("fetching token: " + tokenUrl)
-    let response = await fetch(tokenUrl, cfgReq);
-    if (response.status < 200 || response.status >= 300) {
-        throw new Error("Network response was not OK, http status " + response.status);
-    }
-    console.log("Finish fetching token: " + tokenUrl)
-    let resToken = (await response.json()) as Token;
-    resToken.expires_in = resToken.expires_in * 1000 + Date.now(); //convert seconds to miliseconds
-
-    globalThis.myDrToken = resToken;  
-    //console.log("REFRESH TOKEN: Bearer: " + resToken.access_token + ", Refresh: " + resToken.refresh_token)
+    globalThis.myDrToken = await requestToken(reqBody);
 }
 
 //adimr52@gmail.com 98112402795

@@ -19,6 +19,7 @@ declare global {
 	}
 	var dbPool: Pool;
 	var myDrToken: Token;
+	var myDr2Token: Token;
 	var doctors: Map<number, Staff>;
 }
 
