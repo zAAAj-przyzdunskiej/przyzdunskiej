@@ -571,6 +571,9 @@ async function requestToken(reqBody: object) {
     resToken.expires_in = Date.now() + resToken.expires_in * 1000;
     return resToken;
 }
+if(!globalThis.myDrToken) {
+    globalThis.myDrToken = new Map<string, Token>();
+}
 for(const dep in depInitTokenReq) {
     const token = requestToken(depInitTokenReq[dep]);
     globalThis.myDrToken.set(dep, token);
