@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD, MYDR_CURTOKEN_BEARER} from '$env/static/private'
+import { MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD, MYDR_CURTOKEN_BEARER, MYDR2_CURTOKEN_REFRESH} from '$env/static/private'
 import { MYDR2_CLIENT_ID, MYDR2_CLIENT_SECRET, MYDR2_USER, MYDR2_PASSWORD, MYDR2_CURTOKEN_BEARER} from '$env/static/private'
 import { ResultCode, type Result, removeNulls, buildUrlQueryData, type Address, type User } from '$lib/utils';
 import { boolean, date, number, z } from 'zod';
@@ -28,14 +28,14 @@ export const depInitTokenReq:{[key:string]: object} = {
 const depRefreshTokenReq:{[key:string]: object} = {
     "_": {
         grant_type: "refresh_token",
-        refresh_token: globalThis.myDrToken.get("_").refresh_token,
+        refresh_token: MYDR2_CURTOKEN_REFRESH,
         client_id: MYDR_CLIENT_ID,
         client_secret: MYDR_CLIENT_SECRET
     },
     "50615": {
         //Ginekolog:
         grant_type: "refresh_token",
-        refresh_token: globalThis.myDrToken.get("50615").refresh_token,
+        refresh_token: MYDR2_CURTOKEN_REFRESH,
         client_id: MYDR2_CLIENT_ID,
         client_secret: MYDR2_CLIENT_SECRET
     }
@@ -202,13 +202,17 @@ export class MyDr {
         if(!token) {
             token = await requestToken(depInitTokenReq[department]);
             globalThis.myDrToken.set(department, token);
-            //env.MYDR2_CURTOKEN_BEARER = token.token
+            env.MYDR2_CURTOKEN_REFRESH = token.refresh_token;
         } else {
             const current = Date.now();
             console.log("Current time: " + current + ". token expire in: " + token.expires_in);
             if(token.expires_in <= current) {
                 console.log("Refreshing token...")
-                token = await requestToken(depRefreshTokenReq[department]);
+                //Use below to reuse token from env:
+                // let req = globalThis.myDrToken == null ? depRefreshTokenReq[department]
+                //             : {refresh_token: globalThis.myDrToken.get(department).refresh_token, ...depRefreshTokenReq[department]};
+                let req = {refresh_token: globalThis.myDrToken.get(department).refresh_token, ...depRefreshTokenReq[department]};
+                token = await requestToken(req);
                 globalThis.myDrToken.set(department, token);
             }
         }
