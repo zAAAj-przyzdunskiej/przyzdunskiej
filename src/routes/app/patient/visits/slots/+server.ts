@@ -9,7 +9,7 @@ export async function GET({ locals, url }) {
         return json({success: false, httpCode: ResultCode.BAD_REQUEST, message: PUBLIC_MISSING_DATE});
     }
     const office = url.searchParams.get("office"); //department
-    const myDr = await MyDr.newInstance();
+    const myDr = await MyDr.newInstance(office);
     const res = await myDr.getFreeSlots(visitDate, office);
     if(!res.success) {
         return json(res);

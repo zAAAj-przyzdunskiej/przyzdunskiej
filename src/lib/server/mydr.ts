@@ -1,10 +1,44 @@
-import {MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD, MYDR_CURTOKEN_BEARER} from '$env/static/private'
+import { env } from '$env/dynamic/private';
+import { MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD, MYDR_CURTOKEN_BEARER} from '$env/static/private'
+import { MYDR2_CLIENT_ID, MYDR2_CLIENT_SECRET, MYDR2_USER, MYDR2_PASSWORD, MYDR2_CURTOKEN_BEARER} from '$env/static/private'
 import { ResultCode, type Result, removeNulls, buildUrlQueryData, type Address, type User } from '$lib/utils';
 import { boolean, date, number, z } from 'zod';
 
-const officeDepartment:{[key:string]: string} = {
+export const officeDepartment:{[key:string]: string} = {
     "58155": "49435",
-    "58210": "50615"
+    "58210": "50615" //Ginekolog
+}
+export const depInitTokenReq:{[key:string]: object} = {
+    "_": {
+        grant_type: "password",
+        username: MYDR_USER,
+        password: MYDR_PASSWORD,
+        client_id: MYDR_CLIENT_ID,
+        client_secret: MYDR_CLIENT_SECRET
+    },
+    "50615": {
+        //Ginekolog:
+        grant_type: "password",
+        username: MYDR2_USER,
+        password: MYDR2_PASSWORD,
+        client_id: MYDR2_CLIENT_ID,
+        client_secret: MYDR2_CLIENT_SECRET
+    }
+}
+const depRefreshTokenReq:{[key:string]: object} = {
+    "_": {
+        grant_type: "refresh_token",
+        refresh_token: globalThis.myDrToken.get("_").refresh_token,
+        client_id: MYDR_CLIENT_ID,
+        client_secret: MYDR_CLIENT_SECRET
+    },
+    "50615": {
+        //Ginekolog:
+        grant_type: "refresh_token",
+        refresh_token: globalThis.myDrToken.get("50615").refresh_token,
+        client_id: MYDR2_CLIENT_ID,
+        client_secret: MYDR2_CLIENT_SECRET
+    }
 }
 
 export interface MyDrUser extends User {
@@ -157,18 +191,26 @@ export class MyDrGetter<T> {
     }
 }
 export class MyDr {
-    static async newInstance(): Promise<MyDr> {
-        let token = globalThis.myDrToken;
-        if(!token) {
-            await initToken();
-            token = globalThis.myDrToken;
+    static async newInstance(office?: string|null, department?: string|null): Promise<MyDr> {
+        if(!department && office) {
+            department = officeDepartment[office];
         }
-        const current = Date.now();
-        console.log("Current time: " + current + ". token expire in: " + token.expires_in);
-        if(token.expires_in <= current) {
-            console.log("Refreshing token...")
-            await refreshToken();
-            token = globalThis.myDrToken;
+        if(!department || depInitTokenReq[department] == null) {
+            department = "_";
+        }
+        let token = globalThis.myDrToken.get(department);
+        if(!token) {
+            token = await requestToken(depInitTokenReq[department]);
+            globalThis.myDrToken.set(department, token);
+            //env.MYDR2_CURTOKEN_BEARER = token.token
+        } else {
+            const current = Date.now();
+            console.log("Current time: " + current + ". token expire in: " + token.expires_in);
+            if(token.expires_in <= current) {
+                console.log("Refreshing token...")
+                token = await requestToken(depRefreshTokenReq[department]);
+                globalThis.myDrToken.set(department, token);
+            }
         }
         console.log("Token: " + token.access_token)
         return new MyDr(token.access_token);
@@ -304,7 +346,7 @@ export class MyDr {
         const queryObj:{[key:string]:any} = {date_from: date, date_to: date, visit_duration: 10};
         if(office) {
             //queryObj.office = office;
-            let dep = [office] || department;
+            let dep = officeDepartment[office] || department;
             if(dep) {
                 queryObj.department = dep;
             }
@@ -495,8 +537,7 @@ interface Token {
 
 const tokenUrl = MYDR_URL + "/o/token/";
 
-if(!globalThis.myDrToken) {
-    initToken();
+//if(!globalThis.myDrToken.) {
     //REFRESH TOKEN: Bearer: GeJdGcYINDWO6bYvxG3963Do2OwXMA, Refresh: WlVOtwD19NdT7L5qSVUqY1gXszS8C3
     //{"access_token": "76D3aJkhbQolmoDjHMrCoLAVYeD9R4", "token_type": "Bearer", "expires_in": 36000, "refresh_token": "gxh3w2u5sDapmAYyYih5Vt6RlpfZjd", "scope": "external_api"}
     // globalThis.myDrToken = {
@@ -505,7 +546,7 @@ if(!globalThis.myDrToken) {
     //     expires_in: Date.now() + 36000000, 
     //     refresh_token: "BwQx07CQApYhGgdkhvakki4Zkhak5S", 
     //     scope: "external_api"};
-}
+//}
 
 async function requestToken(reqBody: object) {
     let cfgReq = {
@@ -526,34 +567,9 @@ async function requestToken(reqBody: object) {
     resToken.expires_in = Date.now() + resToken.expires_in * 1000;
     return resToken;
 }
-async function initToken() {
-    let reqBody = {
-        grant_type: "password",
-        username: MYDR_USER,
-        password: MYDR_PASSWORD,
-        client_id: MYDR_CLIENT_ID,
-        client_secret: MYDR_CLIENT_SECRET
-    }
-    globalThis.myDrToken = await requestToken(reqBody);
-}
-async function initToken4Test() {
-    globalThis.myDrToken = {
-        expires_in: Date.now() + 3600000,
-        access_token: MYDR_CURTOKEN_BEARER,
-        token_type: "Bearer",
-        scope: "external_api",
-        refresh_token: "J45zGtNpkdpGhsqwaOjU6nz0Klzrhb"
-    }
-}
-async function refreshToken() {
-
-    let reqBody: object = {
-        grant_type: "refresh_token",
-        refresh_token: globalThis.myDrToken.refresh_token,
-        client_id: MYDR_CLIENT_ID,
-        client_secret: MYDR_CLIENT_SECRET
-    }
-    globalThis.myDrToken = await requestToken(reqBody);
+for(const dep in depInitTokenReq) {
+    const token = requestToken(depInitTokenReq[dep]);
+    globalThis.myDrToken.set(dep, token);
 }
 
 //adimr52@gmail.com 98112402795

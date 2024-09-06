@@ -1,6 +1,6 @@
 import { DEFAULT_VISIT_TYPE } from '$env/static/private';
-import { PUBLIC_NO_DECLARATION, PUBLIC_UA_DEACTIVATED, PUBLIC_UNAUTHORIZED } from '$env/static/public';
-import { MyDr, VisitKind, type Visit } from '$lib/server/mydr.js';
+import { PUBLIC_FAIL_MYDR, PUBLIC_NO_DECLARATION, PUBLIC_UA_DEACTIVATED, PUBLIC_UNAUTHORIZED } from '$env/static/public';
+import { MyDr, VisitKind, type Visit, officeDepartment, depInitTokenReq } from '$lib/server/mydr.js';
 import { getDoctor, updateUser } from '$lib/server/user.js';
 import { ResultCode } from '$lib/utils.js';
 import { json, redirect } from '@sveltejs/kit';
@@ -24,8 +24,6 @@ export async function POST({ request, locals, cookies }) {
     if(!user.id) {
         return json({success: false, httpCode: ResultCode.UNAUTHORIZED, message: PUBLIC_NO_DECLARATION });
     }
-    const myDrPromise = MyDr.newInstance();
-
     const body = (await request.json());
 	const validResult = visitSchema.safeParse(body);
     if (!validResult.success) {
@@ -40,13 +38,33 @@ export async function POST({ request, locals, cookies }) {
     zweryfikowano dane osobowe - pacjent przedstawił się, podał date urodzenia - zgodna z PESEL`;
     visit.visit_kind = VisitKind.NFZ;
     visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
-    const myDr = await myDrPromise;
-    const myDrUser = await myDr.getPatientByPk(user.id);
+    const myDr = await MyDr.newInstance(visit.office.toString());
+    let myDrUser = await myDr.getPatientByPk(user.id);
     if(myDrUser == null) {
-        console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
-        updateUser({pesel: user.pesel, active: false, id: null});
-        locals.message = PUBLIC_UA_DEACTIVATED;
-        throw redirect(303, "/app/logout");
+        const dep = officeDepartment[visit.office];
+        if(depInitTokenReq[dep]) { // myDr is department private MYDR
+            const myDr1 = await MyDr.newInstance("_"); //get default MYDR
+            const myDr1User = await myDr1.getPatientByPk(user.id);
+            if(myDr1User) {
+                myDr1User.id = null;
+                const myDr1Result = await myDr1.createPatient(myDr1User); //Create patient in department of MyDR
+                if(!myDr1Result.success) {
+                    console.log("Can not create patient account in MyDR2. Patient: id=" + user.id + ", PESEL=" + user.pesel 
+                        + ", OfficeID: " + visit.office
+                        + ", status code: " + myDr1Result.httpCode
+                        + ", Message: " + myDr1Result.message);
+                    locals.message = PUBLIC_FAIL_MYDR + ". Biuro ID: " + visit.office + ", Operation: create patient";
+                    return json({success: false, httpCode: ResultCode.SERVER_ERROR, message: locals.message, visit: {}})
+                }
+                myDrUser = myDr1Result.patient;
+            }
+        }
+        if(myDrUser == null) {
+            console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
+            updateUser({pesel: user.pesel, active: false, id: null});
+            locals.message = PUBLIC_UA_DEACTIVATED;
+            throw redirect(303, "/app/logout");
+        }
     }
     if(!myDrUser.active) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not active");
