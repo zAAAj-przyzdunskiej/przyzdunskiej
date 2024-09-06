@@ -193,7 +193,7 @@ export class MyDr {
         if(!department && office) {
             department = officeDepartment[office];
         }
-        if(!department || depInitTokenReq[department] == null) {
+        if(!department || !depInitTokenReq[department]) {
             department = "_";
         }
         let token = globalThis.myDrToken.get(department);
@@ -560,18 +560,19 @@ async function requestToken(reqBody: object) {
     if (response.status < 200 || response.status >= 300) {
         throw new Error("Network response was not OK, http status " + response.status + ", message: " + (await response.text()));
     }
-    console.log("Finish fetching token: " + tokenUrl)
 
     let resToken = await response.json() as Token;
     resToken.expires_in = Date.now() + resToken.expires_in * 1000;
+    console.log("Finish fetching token: " + tokenUrl + ". Token: " + resToken.access_token)
     return resToken;
 }
+
 if(!globalThis.myDrToken) {
     globalThis.myDrToken = new Map<string, Token>();
 }
 for(const dep in depInitTokenReq) {
-    const req = requestToken(depInitTokenReq[dep]);
-    globalThis.myDrToken.set(dep, req);
+    const token = requestToken(depInitTokenReq[dep]);
+    globalThis.myDrToken.set(dep, token);
 }
 
 //adimr52@gmail.com 98112402795
