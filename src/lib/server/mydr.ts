@@ -28,14 +28,12 @@ export const depInitTokenReq:{[key:string]: object} = {
 const depRefreshTokenReq:{[key:string]: object} = {
     "_": {
         grant_type: "refresh_token",
-        refresh_token: MYDR2_CURTOKEN_REFRESH,
         client_id: MYDR_CLIENT_ID,
         client_secret: MYDR_CLIENT_SECRET
     },
     "50615": {
         //Ginekolog:
         grant_type: "refresh_token",
-        refresh_token: MYDR2_CURTOKEN_REFRESH,
         client_id: MYDR2_CLIENT_ID,
         client_secret: MYDR2_CLIENT_SECRET
     }
@@ -348,15 +346,12 @@ export class MyDr {
     // }
     async getFreeSlots(date: string, office?: string|null, department?: string|null) {
         const queryObj:{[key:string]:any} = {date_from: date, date_to: date, visit_duration: 10};
-        if(office) {
-            //queryObj.office = office;
-            let dep = officeDepartment[office] || department;
-            if(dep) {
-                queryObj.department = dep;
-            }
-        } else if(department) {
+        if(department) {
             queryObj.department = department;
-        }
+        } else if(office) {
+            //queryObj.office = office;
+            queryObj.department = officeDepartment[office];
+        } 
 
         const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData(queryObj);
         const reqInit: RequestInit = {
@@ -575,8 +570,8 @@ if(!globalThis.myDrToken) {
     globalThis.myDrToken = new Map<string, Token>();
 }
 for(const dep in depInitTokenReq) {
-    const token = requestToken(depInitTokenReq[dep]);
-    globalThis.myDrToken.set(dep, token);
+    const req = requestToken(depInitTokenReq[dep]);
+    globalThis.myDrToken.set(dep, req);
 }
 
 //adimr52@gmail.com 98112402795
