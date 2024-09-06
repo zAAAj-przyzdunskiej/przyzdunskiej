@@ -18,8 +18,8 @@ declare global {
 		// interface Platform {}
 	}
 	var dbPool: Pool;
-	var myDrToken = new Map<string, Token>();
-	var doctors = new Map<number, Staff>();
+	var myDrToken: Map<string, Token>;
+	var doctors:Map<number, Staff>;
 }
 
 export {};

@@ -222,9 +222,6 @@ export async function register(userInfo: UserRegister): Promise<Result> {
 	return result;
 }
 export async function getDoctor(id: number): Promise<Staff|null> {
-	if(!globalThis.doctors) {
-        globalThis.doctors = new Map<number, Staff>();
-    }
 	let doctor:Staff|undefined|null = globalThis.doctors.get(id);
 	if(doctor) return doctor;
 
@@ -308,6 +305,9 @@ async function updateMyDr(userInfo: UserRegister, myDrUser: User): Promise<User>
 	if(!data.surname) data.surname = myDrUser.surname;
 	let result = await myDr.updatePatient(data);
 	return result.patient;
+}
+if(!globalThis.doctors) {
+	globalThis.doctors = new Map<number, Staff>();
 }
 // export async function editProfile(userInfo: UserRegister, myDrUser: User|null): Promise<Result>{
 	
