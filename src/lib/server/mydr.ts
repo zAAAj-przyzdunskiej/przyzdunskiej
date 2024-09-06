@@ -190,17 +190,18 @@ export class MyDrGetter<T> {
 }
 export class MyDr {
     static async newInstance(office?: string|null, department?: string|null): Promise<MyDr> {
-        if(!department && office) {
-            department = officeDepartment[office];
+        let dep = department
+        if(!dep) {
+            dep = office ? officeDepartment[office] : "_";
         }
-        if(!department || !depInitTokenReq[department]) {
-            department = "_";
+        if(!depInitTokenReq[dep]) {
+            dep = "_";
         }
-        let token = globalThis.myDrToken.get(department);
+        let token = globalThis.myDrToken.get(dep);
         if(!token) {
-            token = await requestToken(depInitTokenReq[department]);
-            globalThis.myDrToken.set(department, token);
-            env.MYDR2_CURTOKEN_REFRESH = token.refresh_token;
+            token = await requestToken(depInitTokenReq[dep]);
+            globalThis.myDrToken.set(dep, token);
+            //env.MYDR2_CURTOKEN_REFRESH = token.refresh_token;
         } else {
             const current = Date.now();
             console.log("Current time: " + current + ". token expire in: " + token.expires_in);
@@ -209,9 +210,9 @@ export class MyDr {
                 //Use below to reuse token from env:
                 // let req = globalThis.myDrToken == null ? depRefreshTokenReq[department]
                 //             : {refresh_token: globalThis.myDrToken.get(department).refresh_token, ...depRefreshTokenReq[department]};
-                let req = {refresh_token: globalThis.myDrToken.get(department).refresh_token, ...depRefreshTokenReq[department]};
+                let req = {refresh_token: globalThis.myDrToken.get(dep).refresh_token, ...depRefreshTokenReq[dep]};
                 token = await requestToken(req);
-                globalThis.myDrToken.set(department, token);
+                globalThis.myDrToken.set(dep, token);
             }
         }
         console.log("Token: " + token.access_token)
