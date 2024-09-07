@@ -31,7 +31,7 @@ export async function POST({ request, locals, cookies }) {
     }
     const visit = validResult.data;
     const dep = officeDepartment[visit.office];
-    const isAnotherMyDr = depInitTokenReq[dep]
+    const isAnotherMyDr = (depInitTokenReq[dep] != null)
     visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
     visit.patient = user.id;
     visit.state = "Zaplanowana";
