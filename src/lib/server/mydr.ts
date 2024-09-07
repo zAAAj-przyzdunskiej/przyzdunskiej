@@ -2,6 +2,7 @@ import { env } from '$env/dynamic/private';
 import { MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD, MYDR_CURTOKEN_BEARER, MYDR2_CURTOKEN_REFRESH} from '$env/static/private'
 import { MYDR2_CLIENT_ID, MYDR2_CLIENT_SECRET, MYDR2_USER, MYDR2_PASSWORD, MYDR2_CURTOKEN_BEARER} from '$env/static/private'
 import { ResultCode, type Result, removeNulls, buildUrlQueryData, type Address, type User } from '$lib/utils';
+import { isEmpty } from 'validator';
 import { boolean, date, number, z } from 'zod';
 
 export const officeDepartment:{[key:string]: string} = {
@@ -505,6 +506,9 @@ export class MyDr {
         }
         if(data["rights"]) {
             data["rights"] = data["rights"].toString();
+        }
+        if(data["maiden_name"] && data["maiden_name"].trim() == "") {
+            data["maiden_name"] = "N/A";
         }
         let cfgReq = {
             method: "POST",
