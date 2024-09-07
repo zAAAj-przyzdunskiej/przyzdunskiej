@@ -35,8 +35,8 @@ export async function POST({ request, locals, cookies }) {
 
     console.log("office = " + sOffice + ", Department = " + dep);
     const isAnotherMyDr = (dep && depInitTokenReq[dep])
-    //visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
-    visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
+    visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
+    //visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
     //visit.patient = user.id;
     visit.state = "Zaplanowana";
     visit.confirmed = true;
