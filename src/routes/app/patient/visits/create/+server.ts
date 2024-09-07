@@ -79,7 +79,7 @@ export async function POST({ request, locals, cookies }) {
     visit.patient = myDrUser.id;
     let result = await myDr.makeAppointment(visit);
     if(result.visit && result.visit.doctor) {
-        const doctor = await getDoctor(result.visit.doctor);
+        const doctor = await getDoctor(result.visit.doctor, myDr);
         if(doctor) {
             result.visit.doctor = doctor.first_name + " " + doctor.last_name;
         }

@@ -221,12 +221,15 @@ export async function register(userInfo: UserRegister): Promise<Result> {
 	}
 	return result;
 }
-export async function getDoctor(id: number): Promise<Staff|null> {
+export async function getDoctor(id: number, myDr?: MyDr): Promise<Staff|null> {
 	let doctor:Staff|undefined|null = globalThis.doctors.get(id);
 	if(doctor) return doctor;
 
 	console.log("querying doctor from MyDr");
-    const myDr = await MyDr.newInstance();
+	if(!myDr) {
+		myDr = await MyDr.newInstance();
+	}
+    
 	doctor = await myDr.getDoctorByPk(id);
 	if(doctor) {
 		globalThis.doctors.set(doctor.id as number, doctor);
