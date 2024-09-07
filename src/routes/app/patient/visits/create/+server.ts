@@ -1,4 +1,4 @@
-import { DEFAULT_VISIT_TYPE } from '$env/static/private';
+import { DEFAULT_VISIT_TYPE, DEFAULT_VISIT_TYPE2 } from '$env/static/private';
 import { PUBLIC_FAIL_MYDR, PUBLIC_NO_DECLARATION, PUBLIC_UA_DEACTIVATED, PUBLIC_UNAUTHORIZED } from '$env/static/public';
 import { MyDr, VisitKind, type Visit, officeDepartment, depInitTokenReq } from '$lib/server/mydr.js';
 import { getDoctor, updateUser } from '$lib/server/user.js';
@@ -30,6 +30,9 @@ export async function POST({ request, locals, cookies }) {
         return json({success: false, httpCode: ResultCode.BAD_REQUEST, message:"Proszę wybrać slot", issues: validResult.error.issues });
     }
     const visit = validResult.data;
+    const dep = officeDepartment[visit.office];
+    const isAnotherMyDr = depInitTokenReq[dep]
+    visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
     visit.patient = user.id;
     visit.state = "Zaplanowana";
     visit.confirmed = true;
@@ -37,12 +40,10 @@ export async function POST({ request, locals, cookies }) {
     visit.examination = `odbyto teleporadę w formie rozmowy telefonicznej \n
     zweryfikowano dane osobowe - pacjent przedstawił się, podał date urodzenia - zgodna z PESEL`;
     visit.visit_kind = VisitKind.NFZ;
-    visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
     const myDr = await MyDr.newInstance(visit.office.toString());
     let myDrUser = await myDr.getPatientByPk(user.id);
     if(myDrUser == null) {
-        const dep = officeDepartment[visit.office];
-        if(depInitTokenReq[dep]) { // myDr is department private MYDR
+        if(isAnotherMyDr) { // myDr is department private MYDR
             const myDr1 = await MyDr.newInstance("_"); //get default MYDR
             const myDr1User = await myDr1.getPatientByPk(user.id);
             if(myDr1User) {
