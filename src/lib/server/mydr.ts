@@ -572,7 +572,7 @@ if(!globalThis.myDrToken) {
     globalThis.myDrToken = new Map<string, Token>();
 }
 for(const dep in depInitTokenReq) {
-    const token = requestToken(depInitTokenReq[dep]);
+    const token = await requestToken(depInitTokenReq[dep]);
     globalThis.myDrToken.set(dep, token);
 }
 
