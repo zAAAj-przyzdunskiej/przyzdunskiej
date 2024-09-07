@@ -457,15 +457,15 @@ export class MyDr {
         if(!data.id) {
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: "id is required"};
         }
-        let message = "";
-        for(let k in this.requiredColumns) {
-            if(!data[k]) {
-                message += k + " is required";
-            }
-        }        
-        if(message.length > 0) {
-            return {success: false, httpCode: ResultCode.BAD_REQUEST, message: message};
-        }
+        // let message = "";
+        // for(let k in this.requiredColumns) {
+        //     if(!data[k]) {
+        //         message += k + " is required";
+        //     }
+        // }        
+        // if(message.length > 0) {
+        //     return {success: false, httpCode: ResultCode.BAD_REQUEST, message: message};
+        // }
 
         let url = MYDR_URL + "/patients/" + data.id + "/";
         delete data.id;
@@ -484,8 +484,9 @@ export class MyDr {
     async createPatient(data: any): Promise<Result> {
         let message = "";
         for(let k in this.requiredColumns) {
-            if(!data[k]) {
-                message += k + " is required";
+            const col = this.requiredColumns[k];
+            if(!data[col]) {
+                message += col + " is required. ";
             }
         }        
         if(message.length > 0) {
