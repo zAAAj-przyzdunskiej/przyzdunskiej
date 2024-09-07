@@ -87,7 +87,7 @@ export enum VisitKind {
 }
 export type Visit = {
     id?: number,
-    patient?: number,
+    patient?: number|null,
     doctor: number,
     office: number,
     date: string,

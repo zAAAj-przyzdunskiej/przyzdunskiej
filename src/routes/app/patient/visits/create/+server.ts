@@ -37,7 +37,7 @@ export async function POST({ request, locals, cookies }) {
     const isAnotherMyDr = (dep && depInitTokenReq[dep])
     //visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
     visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
-    visit.patient = user.id;
+    //visit.patient = user.id;
     visit.state = "Zaplanowana";
     visit.confirmed = true;
     visit.note = "online";
@@ -76,6 +76,7 @@ export async function POST({ request, locals, cookies }) {
         locals.message = PUBLIC_UA_DEACTIVATED;
         throw redirect(303, "/app/logout");
     }
+    visit.patient = myDrUser.id;
     let result = await myDr.makeAppointment(visit);
     if(result.visit && result.visit.doctor) {
         const doctor = await getDoctor(result.visit.doctor);
