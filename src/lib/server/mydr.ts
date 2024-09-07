@@ -507,12 +507,17 @@ export class MyDr {
         if(data["rights"]) {
             data["rights"] = data["rights"].toString();
         }
-        if(!data["maiden_name"]) {
-            data["maiden_name"] = "N/A";
+        for(const key in data) {
+            if(!data[key]) {
+                delete data[key];
+            }
         }
-        if(!data["second_name"]) {
-            delete data.second_name;
-        }
+        // if(!data["maiden_name"]) {
+        //     data["maiden_name"] = "N/A";
+        // }
+        // if(!data["second_name"]) {
+        //     delete data.second_name;
+        // }
         let cfgReq = {
             method: "POST",
             headers: {"Content-Type": "application/json", ...this.headers},
