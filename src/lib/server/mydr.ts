@@ -363,6 +363,11 @@ export class MyDr {
             method: "GET",
             headers: this.headers
         }
+        let depListRes = await fetch(MYDR_URL + "/departments/", reqInit);
+        let resText = await depListRes.text();
+        console.log("Department List: " + resText);
+
+
         console.log("Requesting " + urlStr);
         let res = await fetch(urlStr, reqInit);
         const ok = res.status >= 200 && res.status < 300 ;
