@@ -347,12 +347,14 @@ export class MyDr {
     // }
     async getFreeSlots(date: string, office?: string|null, department?: string|null) {
         const queryObj:{[key:string]:any} = {date_from: date, date_to: date, visit_duration: 10};
-        if(department) {
-            queryObj.department = department;
-        } else if(office) {
+        let dep = department;
+        if(!dep && office) {
             //queryObj.office = office;
-            queryObj.department = officeDepartment[office];
+            dep = officeDepartment[office];
         } 
+        if(dep && !depInitTokenReq[dep]) { //if department is DEFAULT
+            queryObj.department = dep;
+        }
 
         const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData(queryObj);
         const reqInit: RequestInit = {
