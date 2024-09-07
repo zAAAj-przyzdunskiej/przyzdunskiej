@@ -277,7 +277,7 @@ export async function getVisits(userId:string, page?: string|null, page_size?: s
 					continue;
 				}
 
-				const doctorObj = await getDoctor(visit.doctor);
+				const doctorObj = await getDoctor(visit.doctor, myDr);
 				//console.log("getDoctor id=" + visit.doctor + ", return " + (doctorObj ? doctorObj.first_name : "null"));
 				const doctorName = doctorObj ? doctorObj.first_name + " " + doctorObj.last_name : "";
 				const {patient, doctor, office, visit_type, latest_modification, ...tmp} = visit;
