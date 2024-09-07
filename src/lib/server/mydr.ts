@@ -346,7 +346,7 @@ export class MyDr {
     //     return result;
     // }
     async getFreeSlots(date: string, office?: string|null, department?: string|null) {
-        const queryObj:{[key:string]:any} = {date_from: date, date_to: date, visit_duration: 10};
+        const queryObj:{[key:string]:any} = {date_from: date, date_to: date};
         let dep = department;
         if(!dep && office) {
             //queryObj.office = office;
@@ -354,6 +354,7 @@ export class MyDr {
         } 
         if(dep && !depInitTokenReq[dep]) { //if department is DEFAULT
             queryObj.department = dep;
+            queryObj.visit_duration = 10;
         }
 
         const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData(queryObj);
