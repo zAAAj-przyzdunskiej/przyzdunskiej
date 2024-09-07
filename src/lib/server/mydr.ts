@@ -389,20 +389,20 @@ export class MyDr {
         }
         
         const data = (await res.json());
-        let results;
-        if(!office) {
-            results = data.results;
-        } else {
-            results = [];
-            const numResult = data.results ? data.results.length : 0;
-            for(let i = 0; i < numResult; i++) {
-                if(data.results[i].office == office) {
-                    results.push(data.results[i]);
-                }
-            }
-        }
+        // let results;
+        // if(!office) {
+        //     results = data.results;
+        // } else {
+        //     results = [];
+        //     const numResult = data.results ? data.results.length : 0;
+        //     for(let i = 0; i < numResult; i++) {
+        //         if(data.results[i].office == office) {
+        //             results.push(data.results[i]);
+        //         }
+        //     }
+        // }
 
-        return {success: true, httpCode: ResultCode.OK, message: "OK", doctors: data.doctors, departments: data.departments, slots: results};
+        return {success: true, httpCode: ResultCode.OK, message: "OK", doctors: data.doctors, departments: data.departments, slots: data.results};//results};
     }
     async makeAppointment(visit: Visit):Promise<Result> {
         let url = MYDR_URL + "/visits/";
