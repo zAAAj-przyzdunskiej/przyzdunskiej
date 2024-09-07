@@ -267,30 +267,32 @@ export async function getVisits(userId:string, page?: string|null, page_size?: s
 			":" + today.getMinutes().toString().padStart(2, '0');
 	const nowDateStr = dateToStr(today);
 	try {
-        const myDr = await MyDr.newInstance();
-        const visitGetter = await myDr.newVisitGetter(userId, queryData);
         const upcoming:VisitTime[] = [], past:VisitTime[] = [];
-        for (const visit of visitGetter.results) {
-            const state = visit.state;
-            if(!state || state == "Usunięta" || state == "Anulowana") {
-                continue;
-            }
+		for(const dep in globalThis.myDrToken) {
+			const myDr = await MyDr.newInstance(null, dep);
+			const visitGetter = await myDr.newVisitGetter(userId, queryData);
+			for (const visit of visitGetter.results) {
+				const state = visit.state;
+				if(!state || state == "Usunięta" || state == "Anulowana") {
+					continue;
+				}
 
-            const doctorObj = await getDoctor(visit.doctor);
-            //console.log("getDoctor id=" + visit.doctor + ", return " + (doctorObj ? doctorObj.first_name : "null"));
-            const doctorName = doctorObj ? doctorObj.first_name + " " + doctorObj.last_name : "";
-            const {patient, doctor, office, visit_type, latest_modification, ...tmp} = visit;
-            const retVisit: VisitTime = {doctor: doctorName, ...tmp};
-            retVisit.timeFrom = formatTime(retVisit.timeFrom);
-            retVisit.timeTo = formatTime(retVisit.timeTo);
-            
-            let cmp = compareVisit(retVisit, {date: nowDateStr, timeFrom: nowTimeStr});
-            if(cmp > 0) {
-                addVisit(upcoming, retVisit)
-            } else {
-                addVisitDecr(past, retVisit)
-            }
-        }
+				const doctorObj = await getDoctor(visit.doctor);
+				//console.log("getDoctor id=" + visit.doctor + ", return " + (doctorObj ? doctorObj.first_name : "null"));
+				const doctorName = doctorObj ? doctorObj.first_name + " " + doctorObj.last_name : "";
+				const {patient, doctor, office, visit_type, latest_modification, ...tmp} = visit;
+				const retVisit: VisitTime = {doctor: doctorName, ...tmp};
+				retVisit.timeFrom = formatTime(retVisit.timeFrom);
+				retVisit.timeTo = formatTime(retVisit.timeTo);
+				
+				let cmp = compareVisit(retVisit, {date: nowDateStr, timeFrom: nowTimeStr});
+				if(cmp > 0) {
+					addVisit(upcoming, retVisit)
+				} else {
+					addVisitDecr(past, retVisit)
+				}
+			}
+		}
         return {success: true, httpCode: 200, message: "ok", pastVisits: past, upcomingVisits: upcoming};
     } catch (error: any) {
 		console.log("Failed to get visits " + error);
