@@ -43,7 +43,7 @@ export async function POST({ request, locals, cookies }) {
     visit.examination = `odbyto teleporadę w formie rozmowy telefonicznej \n
     zweryfikowano dane osobowe - pacjent przedstawił się, podał date urodzenia - zgodna z PESEL`;
     visit.visit_kind = VisitKind.NFZ;
-    const myDr = await MyDr.newInstance(visit.office.toString());
+    const myDr = await MyDr.newInstance(sOffice);
     let myDrUser = await myDr.getPatientByPk(user.id);
     if(myDrUser == null) {
         if(isAnotherMyDr) { // myDr is department private MYDR
@@ -51,16 +51,16 @@ export async function POST({ request, locals, cookies }) {
             const myDr1User = await myDr1.getPatientByPk(user.id);
             if(myDr1User) {
                 myDr1User.id = null;
-                const myDr1Result = await myDr1.createPatient(myDr1User); //Create patient in department of MyDR
-                if(!myDr1Result.success) {
+                const myDr2Result = await myDr.createPatient(myDr1User); //Create patient in department of MyDR
+                if(!myDr2Result.success) {
                     console.log("Can not create patient account in MyDR2. Patient: id=" + user.id + ", PESEL=" + user.pesel 
                         + ", OfficeID: " + visit.office
-                        + ", status code: " + myDr1Result.httpCode
-                        + ", Message: " + myDr1Result.message);
+                        + ", status code: " + myDr2Result.httpCode
+                        + ", Message: " + myDr2Result.message);
                     locals.message = PUBLIC_FAIL_MYDR + ". Biuro ID: " + visit.office + ", Operation: create patient";
                     return json({success: false, httpCode: ResultCode.SERVER_ERROR, message: locals.message, visit: {}})
                 }
-                myDrUser = myDr1Result.patient;
+                myDrUser = myDr2Result.patient;
             }
         }
         if(myDrUser == null) {
