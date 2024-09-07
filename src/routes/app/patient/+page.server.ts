@@ -13,7 +13,7 @@ export async function load({url, locals}) {
     }
     const page = url.searchParams.get("page");
     const page_size = url.searchParams.get("page_size");
-    let result = await getVisits(user.id.toString(), page, page_size);
+    let result = await getVisits(user, page, page_size);
     return {success: result.success, message: result.message || '', 
             isWomen: (user.sex != null && user.sex.toLowerCase() == "kobieta"), 
             upommingVisits: result.upcomingVisits || []};

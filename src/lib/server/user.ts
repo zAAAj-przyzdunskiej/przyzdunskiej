@@ -257,7 +257,7 @@ function addVisitDecr(visits: VisitTime[], newVisit: VisitTime) {
     }
 }
 
-export async function getVisits(userId:string, page?: string|null, page_size?: string|null): Promise<Result> {
+export async function getVisits(user:User, page?: string|null, page_size?: string|null): Promise<Result> {
 	let queryData:any = null;
 	if(page && page_size) {
 		queryData = {page: page, page_size:page_size}
@@ -270,6 +270,10 @@ export async function getVisits(userId:string, page?: string|null, page_size?: s
         const upcoming:VisitTime[] = [], past:VisitTime[] = [];
 		for(const dep of globalThis.myDrToken.keys()) {
 			const myDr = await MyDr.newInstance(null, dep);
+			const userId = (dep === "_") ? user.id?.toString() : user.myDR2Id?.toString()
+			if(!userId) {
+				continue;
+			}
 			const visitGetter = await myDr.newVisitGetter(userId, queryData);
 			for (const visit of visitGetter.results) {
 				const state = visit.state;

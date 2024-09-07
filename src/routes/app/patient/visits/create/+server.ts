@@ -45,9 +45,11 @@ export async function POST({ request, locals, cookies }) {
     zweryfikowano dane osobowe - pacjent przedstawił się, podał date urodzenia - zgodna z PESEL`;
     visit.visit_kind = VisitKind.NFZ;
     const myDr = await MyDr.newInstance(sOffice);
-    let myDrUser = await myDr.getPatientByPk(user.id);
-    if(myDrUser == null) {
-        if(isAnotherMyDr) { // myDr is department private MYDR
+    let myDrUser = null; //isAnotherMyDr ? (user.myDR2Id ?  await myDr.getPatientByPk(user.myDR2Id) : null) : await myDr.getPatientByPk(user.id);
+    if(isAnotherMyDr) {
+        if(user.myDR2Id) {
+            myDrUser = myDr.getPatientByPk(user.myDR2Id);
+        } else {
             const myDr1 = await MyDr.newInstance("_"); //get default MYDR
             const myDr1User = await myDr1.getPatientByPk(user.id);
             if(myDr1User) {
@@ -61,15 +63,22 @@ export async function POST({ request, locals, cookies }) {
                     return json({success: false, httpCode: ResultCode.SERVER_ERROR, message: locals.message, visit: {}})
                 }
                 myDrUser = myDr2Result.patient;
+                if(myDrUser) {
+                    updateUser({id: user.id, myDR2Id: myDrUser.id});
+                }
             }
         }
-        if(myDrUser == null) {
-            console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
-            updateUser({pesel: user.pesel, active: false, id: null});
-            locals.message = PUBLIC_UA_DEACTIVATED;
-            throw redirect(303, "/app/logout");
-        }
+    } else {
+        myDrUser = await myDr.getPatientByPk(user.id);
     }
+    
+    if(myDrUser == null) {
+        console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
+        updateUser({pesel: user.pesel, active: false, id: null});
+        locals.message = PUBLIC_UA_DEACTIVATED;
+        throw redirect(303, "/app/logout");
+    }
+
     if(!myDrUser.active) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not active");
         updateUser({pesel: user.pesel, active: false});

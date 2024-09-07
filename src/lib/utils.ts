@@ -506,6 +506,7 @@ export type User = {
 	residence_address_id: number | null
 	createdAt: string | null
 	updatedAt: string | null
+	myDR2Id: number | null
 }
 export const userLoginSchema: z.ZodType<UserLogin> = z.object({
 	pesel: z.string({required_error: PUBLIC_MISSING_PESEL})

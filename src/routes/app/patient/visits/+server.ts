@@ -13,5 +13,5 @@ export async function GET({ locals, url}) {
     }
     const page = url.searchParams.get("page");
     const page_size = url.searchParams.get("page_size");
-    return json(await getVisits(user.id.toString(), page, page_size));
+    return json(await getVisits(user, page, page_size));
 }
