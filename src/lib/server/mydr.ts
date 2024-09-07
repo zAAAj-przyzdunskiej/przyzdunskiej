@@ -510,6 +510,9 @@ export class MyDr {
         if(!data["maiden_name"]) {
             data["maiden_name"] = "N/A";
         }
+        if(!data["second_name"]) {
+            delete data.second_name;
+        }
         let cfgReq = {
             method: "POST",
             headers: {"Content-Type": "application/json", ...this.headers},
