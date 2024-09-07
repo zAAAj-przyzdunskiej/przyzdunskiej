@@ -6,7 +6,7 @@ import { boolean, date, number, z } from 'zod';
 
 export const officeDepartment:{[key:string]: string} = {
     "58155": "49435",
-    "58210": "50615" //Ginekolog
+    "58210": "51934" //Ginekolog
 }
 export const depInitTokenReq:{[key:string]: object} = {
     "_": {
@@ -16,7 +16,7 @@ export const depInitTokenReq:{[key:string]: object} = {
         client_id: MYDR_CLIENT_ID,
         client_secret: MYDR_CLIENT_SECRET
     },
-    "50615": {
+    "51934": {
         //Ginekolog:
         grant_type: "password",
         username: MYDR2_USER,
@@ -31,7 +31,7 @@ const depRefreshTokenReq:{[key:string]: object} = {
         client_id: MYDR_CLIENT_ID,
         client_secret: MYDR_CLIENT_SECRET
     },
-    "50615": {
+    "51934": {
         //Ginekolog:
         grant_type: "refresh_token",
         client_id: MYDR2_CLIENT_ID,
@@ -345,27 +345,35 @@ export class MyDr {
     //     //delete result.pesel;
     //     return result;
     // }
+    
     async getFreeSlots(date: string, office?: string|null, department?: string|null) {
-        //const queryObj:{[key:string]:any} = {date_from: date, date_to: date};
-        const queryObj:{[key:string]:any} = {date: date};
+        /**
+         * {"id":51934,
+         * "name":"PORADNIA POŁOŻNICZO-GINEKOLOGICZNA",
+         * "regon":"52888165800012","department_code":"56695","departmental_code_7":"001","departmental_code_8":"1450","code_5":"01","nip":"8883168681","telephone":"690 655 792","street":"Zduńska","house_number":"6/12","flat_number":"L.3","postal_code":"87-800","city":"WŁOCŁAWEK","province":"Kujawsko-pomorskie","country":"POLSKA","work_from":"07:00:00","work_to":"21:00:00","mus_code":"001","kids_allowed":false}
+         */
+        const queryObj:{[key:string]:any} = {date_from: date, date_to: date};
+        //const queryObj:{[key:string]:any} = {date: date};
         let dep = department;
         if(!dep && office) {
             //queryObj.office = office;
             dep = officeDepartment[office];
         } 
-        if(dep && !depInitTokenReq[dep]) { //if department is DEFAULT
-            queryObj.department = dep;
-            queryObj.visit_duration = 10;
-        }
+        // if(dep && !depInitTokenReq[dep]) { //if department is DEFAULT
+        //     queryObj.department = dep;
+        //     queryObj.visit_duration = 10;
+        // }
+        queryObj.department = dep;
+        queryObj.visit_duration = 10;
 
-        const urlStr = MYDR_URL + "/visits/slots/" + "?" + buildUrlQueryData(queryObj);
+        const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData(queryObj);
         const reqInit: RequestInit = {
             method: "GET",
             headers: this.headers
         }
-        let depListRes = await fetch(MYDR_URL + "/departments/", reqInit);
-        let resText = await depListRes.text();
-        console.log("Department List: " + resText);
+        // let depListRes = await fetch(MYDR_URL + "/departments/", reqInit);
+        // let resText = await depListRes.text();
+        // console.log("Department List: " + resText);
 
 
         console.log("Requesting " + urlStr);
