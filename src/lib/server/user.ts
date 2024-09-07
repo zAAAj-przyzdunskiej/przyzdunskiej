@@ -268,7 +268,7 @@ export async function getVisits(userId:string, page?: string|null, page_size?: s
 	const nowDateStr = dateToStr(today);
 	try {
         const upcoming:VisitTime[] = [], past:VisitTime[] = [];
-		for(const dep in globalThis.myDrToken) {
+		globalThis.myDrToken.forEach(async (token, dep) => {
 			const myDr = await MyDr.newInstance(null, dep);
 			const visitGetter = await myDr.newVisitGetter(userId, queryData);
 			for (const visit of visitGetter.results) {
@@ -292,7 +292,7 @@ export async function getVisits(userId:string, page?: string|null, page_size?: s
 					addVisitDecr(past, retVisit)
 				}
 			}
-		}
+		});
         return {success: true, httpCode: 200, message: "ok", pastVisits: past, upcomingVisits: upcoming};
     } catch (error: any) {
 		console.log("Failed to get visits " + error);
