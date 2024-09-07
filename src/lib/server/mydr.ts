@@ -471,7 +471,7 @@ export class MyDr {
         delete data.id;
         let cfgReq = {
             method: "PATCH",
-            headers: this.headers,
+            headers: {"Content-Type": "application/json", ...this.headers},
             body: JSON.stringify(data)
         };
         let response = await fetch(url, cfgReq);
@@ -497,7 +497,7 @@ export class MyDr {
         delete data.id;
         let cfgReq = {
             method: "POST",
-            headers: this.headers,
+            headers: {"Content-Type": "application/json", ...this.headers},
             body: JSON.stringify(data)
         };
         let response = await fetch(url, cfgReq);
