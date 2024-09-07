@@ -507,7 +507,7 @@ export class MyDr {
         if(data["rights"]) {
             data["rights"] = data["rights"].toString();
         }
-        if(isEmpty(data["maiden_name"])) {
+        if(!data["maiden_name"]) {
             data["maiden_name"] = "N/A";
         }
         let cfgReq = {
