@@ -50,8 +50,7 @@ export async function POST({ request, locals, cookies }) {
             const myDr1 = await MyDr.newInstance("_"); //get default MYDR
             const myDr1User = await myDr1.getPatientByPk(user.id);
             if(myDr1User) {
-                myDr1User.id = null;
-                const myDr2Result = await myDr.createPatient(myDr1User); //Create patient in department of MyDR
+                const myDr2Result = await myDr.createPatient({myDr1User}); //Create patient in department of MyDR
                 if(!myDr2Result.success) {
                     console.log("Can not create patient account in MyDR2. Patient: id=" + user.id + ", PESEL=" + user.pesel 
                         + ", OfficeID: " + visit.office

@@ -495,6 +495,15 @@ export class MyDr {
 
         let url = MYDR_URL + "/patients/";
         delete data.id;
+        if(data["identity_type"]) {
+            data["identity_type"] = data["identity_type"].toString();
+        }
+        if(data["country"]) {
+            data["country"] = data["country"].toString();
+        }
+        if(data["rights"]) {
+            data["rights"] = data["rights"].toString();
+        }
         let cfgReq = {
             method: "POST",
             headers: {"Content-Type": "application/json", ...this.headers},
