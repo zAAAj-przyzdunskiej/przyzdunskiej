@@ -361,6 +361,7 @@ export class MyDr {
             method: "GET",
             headers: this.headers
         }
+        console.log("Requesting " + urlStr);
         let res = await fetch(urlStr, reqInit);
         const ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
