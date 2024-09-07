@@ -30,8 +30,8 @@ export async function POST({ request, locals, cookies }) {
         return json({success: false, httpCode: ResultCode.BAD_REQUEST, message:"Proszę wybrać slot", issues: validResult.error.issues });
     }
     const visit = validResult.data;
-    const dep = officeDepartment[visit.office];
-    const isAnotherMyDr = (depInitTokenReq[dep] != null)
+    const dep = officeDepartment[visit.office.toString()];
+    const isAnotherMyDr = (dep && depInitTokenReq[dep])
     visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
     visit.patient = user.id;
     visit.state = "Zaplanowana";
