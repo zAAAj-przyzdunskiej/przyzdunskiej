@@ -497,6 +497,8 @@ export class MyDr {
         delete data.id;
         if(data["identity_type"]) {
             data["identity_type"] = data["identity_type"].toString();
+        } else {
+            data["identity_type"] = "";
         }
         if(data["country"]) {
             data["country"] = data["country"].toString();
