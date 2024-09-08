@@ -7,7 +7,8 @@ import { boolean, date, number, z } from 'zod';
 
 export const officeDepartment:{[key:string]: string} = {
     "58155": "49435",
-    "59880": "51934" //Ginekolog
+    "59880": "51934", //Ginekolog
+    "59881": "51934" //Ginekolog
 }
 export const depInitTokenReq:{[key:string]: object} = {
     "_": {
