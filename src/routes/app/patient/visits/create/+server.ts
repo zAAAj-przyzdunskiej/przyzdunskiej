@@ -66,7 +66,7 @@ export async function POST({ request, locals, cookies }) {
                 myDrUser = myDr2Result.patient;
                 if(myDrUser) {
                     console.log("Update MyDR2 id to user.myDR2Id. myDR2Id = " + myDrUser.id + ", PESEL=" + user.pesel);
-                    updateUser({myDR2Id: +myDrUser.id, pesel: user.pesel});
+                    updateUser({myDR2Id: myDrUser.id.toString(), pesel: user.pesel});
                 }
             }
         }
