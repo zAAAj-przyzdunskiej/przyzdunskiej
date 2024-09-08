@@ -88,7 +88,12 @@ export async function update(tableName: string, record: object, where: object):P
     let sql = "UPDATE \"" + tableName + "\" SET \"updatedAt\" = '" + getTimeStampStr(new Date()) + "'";
 
 	Object.entries(record).forEach(([key, value]) => {
-        if(key && value) {
+        if(key && value != undefined) {
+            if(value == null) {
+                value = "NULL";
+            } else if(typeof value !== "string" ){
+                value = value.toString();
+            }
             sql = sql + ", \"" + key + "\" = " + pg.escapeLiteral(value);
         }
 	});

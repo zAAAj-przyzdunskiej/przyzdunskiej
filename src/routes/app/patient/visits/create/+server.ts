@@ -51,10 +51,10 @@ export async function POST({ request, locals, cookies }) {
             myDrUser = myDr.getPatientByPk(user.mydr2id);
         } else {
             const myDr1 = await MyDr.newInstance("_"); //get default MYDR
-            const myDr1User = await myDr1.getPatientByPk(user.id);
-            if(myDr1User) {
+            myDrUser = await myDr1.getPatientByPk(user.id);
+            if(myDrUser && myDrUser.active) {
                 console.log("Creating MyDR2 user. PESEL=" + user.pesel);
-                const myDr2Result = await myDr.createPatient(myDr1User); //Create patient in department of MyDR
+                const myDr2Result = await myDr.createPatient(myDrUser); //Create patient in department of MyDR
                 if(!myDr2Result.success) {
                     console.log("Can not create patient account in MyDR2. Patient: id=" + user.id + ", PESEL=" + user.pesel 
                         + ", OfficeID: " + visit.office
@@ -64,23 +64,24 @@ export async function POST({ request, locals, cookies }) {
                     return json({success: false, httpCode: ResultCode.SERVER_ERROR, message: locals.message, visit: {}})
                 }
                 myDrUser = myDr2Result.patient;
-                if(myDrUser) {
-                    console.log("Update MyDR2 id to user.mydr2id. mydr2id = " + myDrUser.id + ", PESEL=" + user.pesel);
-                    updateUser({mydr2id: myDrUser.id.toString(), pesel: user.pesel});
+                if(!myDrUser) {
+                    console.log("Unknown error: cannot create Patient record in MyDR2");
+                    return json({success: false, httpCode: ResultCode.SERVER_ERROR, message: "Backend server is temporary down, please try again later", visit: {}});
                 }
+                console.log("Update MyDR2 id to user.mydr2id. mydr2id = " + myDrUser.id + ", PESEL=" + user.pesel);
+                updateUser({mydr2id: myDrUser.id, pesel: user.pesel});
             }
         }
     } else {
         myDrUser = await myDr.getPatientByPk(user.id);
+        if(myDrUser == null) {
+            console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
+            updateUser({pesel: user.pesel, active: false, id: null});
+            locals.message = PUBLIC_UA_DEACTIVATED;
+            throw redirect(303, "/app/logout");
+        }
     }
     
-    if(myDrUser == null) {
-        console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
-        updateUser({pesel: user.pesel, active: false, id: null});
-        locals.message = PUBLIC_UA_DEACTIVATED;
-        throw redirect(303, "/app/logout");
-    }
-
     if(!myDrUser.active) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not active");
         updateUser({pesel: user.pesel, active: false});
