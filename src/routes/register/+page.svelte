@@ -19,7 +19,7 @@
 		</div>
 		<div class="w-full pr-0 md:pr-16 lg:pr-0">
 			<p class="text-lg leading-relaxed  text-gray-600 dark:text-gray-300"><i class="font-light ">Czy chcesz zostać Naszym Pacjentem? </i>
-				<a class="ml-3 text-2xl text-primary dark:text-primaryLight font-semibold" href="https://form.jotform.com/240191673441049">Kliknij tutaj!</a></p>
+				<a class="ml-3 text-2xl text-primary dark:text-primaryLight font-semibold" href="https://form.jotform.com/242495065846365">Kliknij tutaj!</a></p>
 		</div>
 		<!-- <div class="mt-10 w-full rounded-lg bg-gray-100 p-8 md:ml-auto md:mt-0">
 			
