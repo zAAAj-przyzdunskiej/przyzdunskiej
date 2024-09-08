@@ -3,7 +3,7 @@ import { PUBLIC_FAIL_MYDR, PUBLIC_NO_DECLARATION, PUBLIC_UA_DEACTIVATED, PUBLIC_
 import { MyDr, VisitKind, type Visit, officeDepartment, depInitTokenReq } from '$lib/server/mydr.js';
 import { getDoctor, updateUser } from '$lib/server/user.js';
 import { ResultCode } from '$lib/utils.js';
-import { json, redirect } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import { z } from 'zod';
 
 const visitSchema: z.ZodType<Visit> = z.object({
@@ -78,7 +78,7 @@ export async function POST({ request, locals, cookies }) {
             console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
             updateUser({pesel: user.pesel, active: false, id: null});
             locals.message = PUBLIC_UA_DEACTIVATED;
-            throw redirect(303, "/logout");
+            return json({success: false, httpCode: ResultCode.FORBIDDEN, message: locals.message, visit: {}})
         }
     }
     
@@ -86,7 +86,7 @@ export async function POST({ request, locals, cookies }) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not active");
         updateUser({pesel: user.pesel, active: false});
         locals.message = PUBLIC_UA_DEACTIVATED;
-        throw redirect(303, "/logout");
+        return json({success: false, httpCode: ResultCode.FORBIDDEN, message: locals.message, visit: {}})
     }
     visit.patient = myDrUser.id;
     let result = await myDr.makeAppointment(visit);
