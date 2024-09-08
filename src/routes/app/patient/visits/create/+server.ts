@@ -78,7 +78,7 @@ export async function POST({ request, locals, cookies }) {
             console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
             updateUser({pesel: user.pesel, active: false, id: null});
             locals.message = PUBLIC_UA_DEACTIVATED;
-            throw redirect(303, "/app/logout");
+            throw redirect(303, "/logout");
         }
     }
     
@@ -86,7 +86,7 @@ export async function POST({ request, locals, cookies }) {
         console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not active");
         updateUser({pesel: user.pesel, active: false});
         locals.message = PUBLIC_UA_DEACTIVATED;
-        throw redirect(303, "/app/logout");
+        throw redirect(303, "/logout");
     }
     visit.patient = myDrUser.id;
     let result = await myDr.makeAppointment(visit);

@@ -48,7 +48,7 @@
 								</a>
 							</li> -->
 							<li>
-								<a href="/app/logout" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
+								<a href="/logout" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
 									<span>Wyloguj się</span>
 								</a>
 							</li>
