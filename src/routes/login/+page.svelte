@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance, } from '$app/forms';
 	import { PUBLIC_MISSING_PESEL, PUBLIC_MSG_PASSWORD_SENT } from '$env/static/public';
 	import { onDestroy } from 'svelte';
 	import { writable } from 'svelte/store';
@@ -8,13 +8,6 @@
 	export let form;
 
 	const isSubmitting = writable(false);;
-	function onSubmit() {
-		isSubmitting.set(true);
-		return () => {
-			isSubmitting.set(false);
-		};
-	}
-
 
 	const countDown = writable(0);
 	let intvCountDown:NodeJS.Timeout;
@@ -70,7 +63,7 @@
 			<!-- Right column container with form -->
 			<div class="md:w-8/12 lg:ml-6 lg:w-5/12">
 				<!-- svelte-ignore a11y-autofocus -->
-				<form method="post" use:enhance={onSubmit} >
+				<form method="post" use:enhance={()=>{isSubmitting.set(true); return async ({update}) => {isSubmitting.set(false); update();};}} >
 					<!-- Pesel input -->
 					<span class="text-gray-600 dark:text-gray-300 mb-5">{data.message || ""}</span>
 					<div class="relative mb-2">
