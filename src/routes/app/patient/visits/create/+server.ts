@@ -53,6 +53,7 @@ export async function POST({ request, locals, cookies }) {
             const myDr1 = await MyDr.newInstance("_"); //get default MYDR
             const myDr1User = await myDr1.getPatientByPk(user.id);
             if(myDr1User) {
+                console.log("Creating MyDR2 user. PESEL=" + user.pesel);
                 const myDr2Result = await myDr.createPatient(myDr1User); //Create patient in department of MyDR
                 if(!myDr2Result.success) {
                     console.log("Can not create patient account in MyDR2. Patient: id=" + user.id + ", PESEL=" + user.pesel 
@@ -64,7 +65,8 @@ export async function POST({ request, locals, cookies }) {
                 }
                 myDrUser = myDr2Result.patient;
                 if(myDrUser) {
-                    updateUser({id: user.id, myDR2Id: myDrUser.id});
+                    console.log("Update MyDR2 id to user.myDR2Id. myDR2Id = " + myDrUser.id + ", PESEL=" + user.pesel);
+                    updateUser({myDR2Id: +myDrUser.id, pesel: user.pesel});
                 }
             }
         }
