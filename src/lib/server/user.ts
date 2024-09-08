@@ -138,14 +138,14 @@ export async function tryRegister(pesel: string): Promise<Result> {
 	return checkUA(localUser, pesel);
 }
 export async function checkUA(localUser: User|null, pesel: string): Promise<Result> {
-	if(localUser != null && localUser.id && localUser.active) {
+	if(localUser && localUser.id && localUser.active) {
 		console.log("User account is already exist and active")
 		return { success: true, httpCode: ResultCode.OK, user: localUser, 
 			message: PUBLIC_UA_EXIST, resultCode: "UA_EXIST"}	
 	}
 	const myDr = await MyDr.newInstance();
 	let myDrUser: MyDrUser|null = null;
-	if(localUser != null && localUser.id) {
+	if(localUser && localUser.id) {
 		myDrUser = await myDr.getPatientByPk(localUser.id);
 		if(myDrUser?.active) {
 			let declr = await myDr.getOneDeclaration(localUser.id);
@@ -200,7 +200,11 @@ export async function checkUA(localUser: User|null, pesel: string): Promise<Resu
 	let psw = randomNumber(4).toString();
 	newUser.password = await bcrypt.hash(psw, 12);
 	//console.log(JSON.stringify(newUser));
-	localUser = await createUser(newUser) as User;
+	if(localUser) {
+		localUser = await updateUser(newUser) as User;
+	} else {
+		localUser = await createUser(newUser) as User;
+	}
 	//console.log(psw);
 	if(! (await sendSMS(localUser.telephone, PUBLIC_MSG_PASSWORD + psw))) {
 		return { success: true, httpCode: ResultCode.OK, user: localUser,
