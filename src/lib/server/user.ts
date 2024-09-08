@@ -270,7 +270,7 @@ export async function getVisits(user:User, page?: string|null, page_size?: strin
         const upcoming:VisitTime[] = [], past:VisitTime[] = [];
 		for(const dep of globalThis.myDrToken.keys()) {
 			const myDr = await MyDr.newInstance(null, dep);
-			const userId = (dep === "_") ? user.id?.toString() : user.myDR2Id?.toString()
+			const userId = (dep === "_") ? user.id?.toString() : user.mydr2id?.toString()
 			if(!userId) {
 				continue;
 			}

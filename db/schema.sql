@@ -72,4 +72,4 @@ ALTER TABLE "User" ADD CONSTRAINT "User_registration_address_id_fkey" FOREIGN KE
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_residence_address_id_fkey" FOREIGN KEY ("residence_address_id") REFERENCES "Address"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
-ALTER TABLE "User" ADD COLUMN myDR2Id INTEGER;
+ALTER TABLE "User" ADD COLUMN mydr2id INTEGER;

@@ -45,10 +45,10 @@ export async function POST({ request, locals, cookies }) {
     zweryfikowano dane osobowe - pacjent przedstawił się, podał date urodzenia - zgodna z PESEL`;
     visit.visit_kind = VisitKind.NFZ;
     const myDr = await MyDr.newInstance(sOffice);
-    let myDrUser = null; //isAnotherMyDr ? (user.myDR2Id ?  await myDr.getPatientByPk(user.myDR2Id) : null) : await myDr.getPatientByPk(user.id);
+    let myDrUser = null; //isAnotherMyDr ? (user.mydr2id ?  await myDr.getPatientByPk(user.mydr2id) : null) : await myDr.getPatientByPk(user.id);
     if(isAnotherMyDr) {
-        if(user.myDR2Id) {
-            myDrUser = myDr.getPatientByPk(user.myDR2Id);
+        if(user.mydr2id) {
+            myDrUser = myDr.getPatientByPk(user.mydr2id);
         } else {
             const myDr1 = await MyDr.newInstance("_"); //get default MYDR
             const myDr1User = await myDr1.getPatientByPk(user.id);
@@ -65,8 +65,8 @@ export async function POST({ request, locals, cookies }) {
                 }
                 myDrUser = myDr2Result.patient;
                 if(myDrUser) {
-                    console.log("Update MyDR2 id to user.myDR2Id. myDR2Id = " + myDrUser.id + ", PESEL=" + user.pesel);
-                    updateUser({myDR2Id: myDrUser.id.toString(), pesel: user.pesel});
+                    console.log("Update MyDR2 id to user.mydr2id. mydr2id = " + myDrUser.id + ", PESEL=" + user.pesel);
+                    updateUser({mydr2id: myDrUser.id.toString(), pesel: user.pesel});
                 }
             }
         }
