@@ -48,7 +48,7 @@ export async function POST({ request, locals, cookies }) {
     let myDrUser = null; //isAnotherMyDr ? (user.mydr2id ?  await myDr.getPatientByPk(user.mydr2id) : null) : await myDr.getPatientByPk(user.id);
     if(isAnotherMyDr) {
         if(user.mydr2id) {
-            myDrUser = myDr.getPatientByPk(user.mydr2id);
+            myDrUser = await myDr.getPatientByPk(user.mydr2id);
         } else {
             const myDr1 = await MyDr.newInstance("_"); //get default MYDR
             myDrUser = await myDr1.getPatientByPk(user.id);

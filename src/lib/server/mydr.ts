@@ -290,7 +290,7 @@ export class MyDr {
             return null;
         }
         const patient = await res.json();
-        console.log("Returned patient: " + JSON.stringify(patient));
+        //console.log("Returned patient: " + JSON.stringify(patient));
         return patient;
     }
     async getOnePatient(queryData: object): Promise<MyDrUser|null> {
