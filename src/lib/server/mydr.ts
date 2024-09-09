@@ -487,7 +487,7 @@ export class MyDr {
         let message = "";
         for(let k in this.requiredColumns) {
             const col = this.requiredColumns[k];
-            if(!data[col]) {
+            if(data[col] === undefined || data[col] === null) {
                 message += col + " is required. ";
             }
         }        
@@ -509,7 +509,7 @@ export class MyDr {
             data["rights"] = data["rights"].toString();
         }
         for(const key in data) {
-            if(!data[key]) {
+            if(typeof data[key] === "string" && !data[key]) {
                 delete data[key];
             }
         }
@@ -519,16 +519,18 @@ export class MyDr {
         // if(!data["second_name"]) {
         //     delete data.second_name;
         // }
-        let cfgReq = {
+        const reqBody = JSON.stringify(data);
+        //console.log("Requesting MyDR User Create: " + reqBody)
+        const cfgReq = {
             method: "POST",
             headers: {"Content-Type": "application/json", ...this.headers},
-            body: JSON.stringify(data)
+            body: reqBody
         };
-        let response = await fetch(url, cfgReq);
+        const response = await fetch(url, cfgReq);
         if (response.status < 200 || response.status >= 300) {
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: await response.text()};
         }
-        let resData = await response.json();
+        const resData = await response.json();
         return {success: true, httpCode: ResultCode.OK, message: "OK", patient: resData as User}
     }
 }
