@@ -280,7 +280,7 @@ export class MyDr {
         const urlStr = MYDR_URL + "/patients/" + id.toString();
         const reqInit: RequestInit = {
             method: "GET",
-            headers: this.headers
+            headers: {"Content-Type": "application/json", ...this.headers}
         }
         let res = await fetch(urlStr, reqInit);
         let ok = res.status >= 200 && res.status < 300 ;
