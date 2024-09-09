@@ -83,8 +83,10 @@ export async function POST({ request, locals, cookies }) {
     }
     
     if(!myDrUser.active) {
-        console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not active");
-        updateUser({pesel: user.pesel, active: false});
+        console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not active ");
+        if(!isAnotherMyDr) {
+            updateUser({pesel: user.pesel, active: false});
+        }
         locals.message = PUBLIC_UA_DEACTIVATED;
         return json({success: false, httpCode: ResultCode.FORBIDDEN, message: locals.message, visit: {}})
     }

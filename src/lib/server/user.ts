@@ -147,12 +147,12 @@ export async function checkUA(localUser: User|null, pesel: string): Promise<Resu
 	let myDrUser: MyDrUser|null = null;
 	if(localUser && localUser.id) {
 		myDrUser = await myDr.getPatientByPk(localUser.id);
-		if(myDrUser?.active) {
-			let declr = await myDr.getOneDeclaration(localUser.id);
-			myDrUser.active = (declr != null)
-		}
 	} else {
 		myDrUser = await myDr.getOnePatient({pesel: pesel, active: true}); 
+	}
+	if(myDrUser && myDrUser.active && myDrUser.id) {
+		let declr = await myDr.getOneDeclaration(+myDrUser.id);
+		myDrUser.active = (declr != null)
 	}
 	if(myDrUser == null || !myDrUser.active) {
 		console.log("MyDr account does not exist or not active: no receive 'Declaration of choice??");

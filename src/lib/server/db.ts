@@ -89,12 +89,14 @@ export async function update(tableName: string, record: object, where: object):P
 
 	Object.entries(record).forEach(([key, value]) => {
         if(key && value != undefined) {
-            if(value == null) {
+            if(value == null || value === "_NA_") {
                 value = "NULL";
-            } else if(typeof value !== "string" ){
+            } else if(typeof value === "string" ){
+                value = pg.escapeLiteral(value);
+            } else {
                 value = value.toString();
             }
-            sql = sql + ", \"" + key + "\" = " + pg.escapeLiteral(value);
+            sql = sql + ", \"" + key + "\" = " + value;
         }
 	});
     sql = sql + " WHERE ";
@@ -102,10 +104,12 @@ export async function update(tableName: string, record: object, where: object):P
         if(key && value != undefined) {
             if(value == null) {
                 value = "NULL";
-            } else if(typeof value !== "string" ){
+            } else if(typeof value === "string" ){
+                value = pg.escapeLiteral(value);
+            } else {
                 value = value.toString();
             }
-            sql = sql + "\"" + key + "\" = " + pg.escapeLiteral(value) + " AND ";
+            sql = sql + "\"" + key + "\" = " + value + " AND ";
         }
 	});
     sql = sql.slice(0, sql.length - 5) + " RETURNING *";
