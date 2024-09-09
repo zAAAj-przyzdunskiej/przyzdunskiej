@@ -83,7 +83,7 @@ export async function POST({ request, locals, cookies }) {
     }
     
     if(!myDrUser.active) {
-        console.log("MyDR account id=" + myDrUser.id + ", PESEL=" + myDrUser.pesel + " is not active ");
+        console.log("MyDR account id=" + myDrUser.id + ", PESEL=" + myDrUser.pesel + " is not active: " + JSON.stringify(myDrUser));
         if(!isAnotherMyDr) {
             updateUser({pesel: user.pesel, active: false});
         }
