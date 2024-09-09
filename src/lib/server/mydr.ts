@@ -277,8 +277,8 @@ export class MyDr {
     }
 
     async getPatientByPk(id: number): Promise<MyDrUser|null> {
-        console.log("Requesting MyDR for patient info. PatienID = " + id);
         const urlStr = MYDR_URL + "/patients/" + id.toString();
+        console.log("Requesting " + urlStr);
         const reqInit: RequestInit = {
             method: "GET",
             headers: {"Content-Type": "application/json", ...this.headers}
@@ -286,10 +286,12 @@ export class MyDr {
         let res = await fetch(urlStr, reqInit);
         let ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
-            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text()))
             return null;
         }
-        return (await res.json()) as MyDrUser;
+        const patient = await res.json();
+        console.log("Returned patient: " + JSON.stringify(patient));
+        return patient;
     }
     async getOnePatient(queryData: object): Promise<MyDrUser|null> {
         let getter: MyDrGetter<MyDrUser>|null = await this.newPatientGetter(queryData);
