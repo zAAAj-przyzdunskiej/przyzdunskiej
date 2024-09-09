@@ -277,6 +277,7 @@ export class MyDr {
     }
 
     async getPatientByPk(id: number): Promise<MyDrUser|null> {
+        console.log("Requesting MyDR for patient info. PatienID = " + id);
         const urlStr = MYDR_URL + "/patients/" + id.toString();
         const reqInit: RequestInit = {
             method: "GET",

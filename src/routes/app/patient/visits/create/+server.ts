@@ -33,7 +33,7 @@ export async function POST({ request, locals, cookies }) {
     const sOffice = visit.office.toString();
     const dep = officeDepartment[sOffice];
 
-    console.log("office = " + sOffice + ", Department = " + dep);
+    //console.log("office = " + sOffice + ", Department = " + dep);
     const isAnotherMyDr = (dep && depInitTokenReq[dep])
     visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
     //visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
@@ -74,7 +74,7 @@ export async function POST({ request, locals, cookies }) {
         }
     } else {
         myDrUser = await myDr.getPatientByPk(user.id);
-        if(myDrUser == null) {
+        if(!myDrUser) {
             console.log("MyDR account id=" + user.id + ", PESEL=" + user.pesel + " is not found");
             updateUser({pesel: user.pesel, active: false, id: null});
             locals.message = PUBLIC_UA_DEACTIVATED;
