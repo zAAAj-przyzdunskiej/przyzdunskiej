@@ -282,7 +282,7 @@
 									<label for="office1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
 								</li>
 								<li>
-									<input type="radio" bind:group={$storeOfficeId} name="office" id="office2" value="59880"/>
+									<input type="radio" bind:group={$storeOfficeId} name="office" id="office2" value="59881"/>
 									<label for="office2" class="text-sm leading-7 text-gray-600">Ginekolog</label>
 								</li>
 							</ul>
