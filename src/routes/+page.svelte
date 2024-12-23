@@ -18,9 +18,9 @@
 			<li>Załatwiaj swoje sprawy z lekarzem bez konieczności wizyty osobistej w Przychodni</li>
 			<li>Uzyskaj konsultacje, e-recepty, skierowania czy badania labolatoryjne.</li>
 			<li>Medycyna rodzinna i Ginekologia</li>
-			<li class="flex flex-row">A wszystko bezpłatnie w 
+			<li class="flex flex-row">A wszystko bezpłatnie w ramach
 				<div class="flex flex-row flex-nowrap justify-center">
-					<i class=" -mr-6 pb-3 align-top text-lg text-primary dark:text-primaryLight"> ramach </i>
+					<i class=" -mr-6 pb-3 align-top text-lg text-primary dark:text-primaryLight">  </i>
 					<LogoNfz style="-ml-1 fill-primary dark:fill-primaryLight" />
 				</div>
 			</li>
