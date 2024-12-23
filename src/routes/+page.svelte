@@ -539,7 +539,7 @@
 			<p class="mt-4 leading-relaxed text-gray-700">
 				Nadal posiadamy miejsca dla nowych Pacjentów chcących wybrać Nas na swojego Lekarza Rodzinnego.
 				<br />Wpisz swój PESEL a strona dalej pokieruję Cię co zrobić.
-				<br />Opieką obejmuje pacjentów z Włocławka oraz okolicznych miejscowości.
+				<br />Opieką obejmujemy pacjentów z Włocławka oraz okolicznych miejscowości.
 			</p>
 		</details>
 
