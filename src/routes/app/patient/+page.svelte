@@ -16,6 +16,7 @@
 	//	const pastVisits = writable([] as VisitTime[]);
 	const today = new Date();
 	const isWomen = data.isWomen || false;
+	const maxDate = new Date(new Date().setFullYear(today.getFullYear() + 1));
 
 	const qas = [
 		// {
@@ -323,7 +324,7 @@
 					<div class="w-full px-3 md:w-1/2">
 						<div class="flex flex-row flex-nowrap w-full">
 							<label for="visitDate" class="flex-row text-sm leading-7 text-gray-600">Wybierz datę wizyty: </label>
-							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="ml-auto mr-3 w-24 h-8 rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
+							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} max={maxDate} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="ml-auto mr-3 w-24 h-8 rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
 						</div>
 						<div class="w-full align-top">
 							<label for="visitTime" class="text-sm leading-7 text-gray-600">Wybierz godzinę wizyty:</label>
