@@ -271,7 +271,7 @@
 		{/if}
 		{#if $upcomingVisits.length == 0}
 			<div class="mt-5 w-full rounded-lg border border-primary/10 bg-gray-100 py-5 pr-0 text-sm text-gray-800 shadow-md">
-				<h2 class="title-font mb-2 px-3 text-lg font-medium text-gray-900">Wypełnij formularz teleporady w formie rozmowy telefonicznej</h2> <br> Wizyty osobiste w Przychodni <u>wymagają umówienia telefonicznego</u> z rejestracją.
+				<h2 class="title-font mb-2 px-3 text-lg font-medium text-gray-900">Wypełnij formularz teleporady w formie rozmowy telefonicznej <br> Wizyty osobiste w Przychodni <u>wymagają umówienia telefonicznego</u> z rejestracją. </h2><br>
 				<div class="flex w-full flex-wrap items-stretch">
 					<div class="w-full flex-row px-3 md:w-1/2">
 						{#if isWomen}
