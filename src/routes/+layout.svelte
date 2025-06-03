@@ -91,4 +91,5 @@
 			</div>
 		</div>
 	</div>
+<center><img scr="FENIKS.jpg" style="vertical-align:middle;margin:50px 0px"></center>
 </footer>
