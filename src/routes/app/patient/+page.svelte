@@ -16,6 +16,7 @@
 	//	const pastVisits = writable([] as VisitTime[]);
 	const today = new Date();
 	const isWomen = data.isWomen || false;
+	const maxDate = new Date(new Date().setFullYear(today.getFullYear() + 1));
 
 	const qas = [
 		// {
@@ -270,19 +271,19 @@
 		{/if}
 		{#if $upcomingVisits.length == 0}
 			<div class="mt-5 w-full rounded-lg border border-primary/10 bg-gray-100 py-5 pr-0 text-sm text-gray-800 shadow-md">
-				<h2 class="title-font mb-2 px-3 text-lg font-medium text-gray-900">Wypełnij formularz e-wizyty</h2>
+				<h2 class="title-font mb-2 px-3 text-lg font-medium text-gray-900">Wypełnij formularz teleporady <br> Wizyty osobiste wymagają <u>kontaktu telefonicznego</u> z rejestracją. </h2><br>
 				<div class="flex w-full flex-wrap items-stretch">
 					<div class="w-full flex-row px-3 md:w-1/2">
 						{#if isWomen}
 						<div class="flex flex-row flex-wrap w-full">
-							<label for="office" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty chcesz?</label>
+							<label for="office" class="text-sm leading-7 text-gray-600">Jakiego rodzaju wizyty potrzebujesz?</label>
 							<ul class="pl-3">
 								<li>
 									<input type="radio" bind:group={$storeOfficeId} name="office" id="office1" value="58155" checked/>
 									<label for="office1" class="text-sm leading-7 text-gray-600">Lekarz rodzinny</label>
 								</li>
 								<li>
-									<input type="radio" bind:group={$storeOfficeId} name="office" id="office2" value="59880"/>
+									<input type="radio" bind:group={$storeOfficeId} name="office" id="office2" value="59881"/>
 									<label for="office2" class="text-sm leading-7 text-gray-600">Ginekolog</label>
 								</li>
 							</ul>
@@ -323,7 +324,7 @@
 					<div class="w-full px-3 md:w-1/2">
 						<div class="flex flex-row flex-nowrap w-full">
 							<label for="visitDate" class="flex-row text-sm leading-7 text-gray-600">Wybierz datę wizyty: </label>
-							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="ml-auto mr-3 w-24 h-8 rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
+							<DateInput id="visitDate" required placeholder="Wybierz datę" bind:value={dateVal} closeOnSelection={true} min={today} max={maxDate} format="yyyy-MM-dd" on:select={(_) => {handler.invalidate()}} class="ml-auto mr-3 w-24 h-8 rounded border border-transparent bg-white invalid:[&:not({initial}):not(:focus)]:border-red-500" />
 						</div>
 						<div class="w-full align-top">
 							<label for="visitTime" class="text-sm leading-7 text-gray-600">Wybierz godzinę wizyty:</label>
