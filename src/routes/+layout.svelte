@@ -91,5 +91,5 @@
 			</div>
 		</div>
 	</div>
-<center><img src="FENIKS1.jpg" style="vertical-align:middle;margin:50px 0px"></center>
+<center><img src="https://www.mojatabletka.pl/lib/nvroy6/FENIKS-mbgzp63d.jpg" style="vertical-align:middle;margin:50px 0px"></center>
 </footer>
