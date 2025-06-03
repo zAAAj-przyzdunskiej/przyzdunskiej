@@ -91,5 +91,5 @@
 			</div>
 		</div>
 	</div>
-<center><img scr="FENIKS1.jpg" style="vertical-align:middle;margin:50px 0px"></center>
+<center><img src="FENIKS1.jpg" style="vertical-align:middle;margin:50px 0px"></center>
 </footer>
