@@ -61,7 +61,7 @@
 	</nav>
 <br>
 <center>
-								<a href="/hpv" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
+								<a href="/password" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
 									<span><p style="color:red;" align="center"><strong>Test DNA HPV / płynna cytologia</strong></p></span>
 								</a>
 							</center>
