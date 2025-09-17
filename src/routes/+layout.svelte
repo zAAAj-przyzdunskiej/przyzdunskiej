@@ -58,14 +58,14 @@
 				</div>
 			</div>
 		</div>
-	</nav>
-<br><br><br>
+	</nav></header>
+<br/><br/><br/>
 <center>
 								<a href="/password" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
 									<span><p style="color:red;" align="center"><strong>Test DNA HPV / płynna cytologia</strong></p></span>
 								</a>
 							</center>
-</header>
+
 <div class="m-auto px-2 md:px-3 pt-24 min-h-141 xl:container sm:px-6 lg:px-12 md:pt-6 md:pb-3">
 	<div aria-hidden="true" class="absolute inset-0 my-auto h-32 w-96 rotate-45 bg-gradient-to-r from-primaryLight to-secondaryLight opacity-50 blur-3xl dark:opacity-20"></div>
 	<slot />
