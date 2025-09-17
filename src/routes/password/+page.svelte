@@ -1,3 +1,5 @@
 <br><br>
 
-<script src="https://www.cognitoforms.com/f/seamless.js" data-key="4fgzlYo0lEy1S0Smf47Pww" data-form="32"></script><br>.
+<iframe src="https://www.cognitoforms.com/f/4fgzlYo0lEy1S0Smf47Pww/32" allow="payment" style="border:0;width:100%;" height="1082"></iframe>
+<script src="https://www.cognitoforms.com/f/iframe.js"></script><br>.
+
