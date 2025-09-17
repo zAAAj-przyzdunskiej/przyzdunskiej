@@ -91,5 +91,12 @@
 			</div>
 		</div>
 	</div>
-<center><img scr="FENIKS.jpg" style="vertical-align:middle;margin:50px 0px"></center>
+
+<br>
+<center><li>
+								<a href="/password" class="block transition hover:text-primary md:px-4 dark:hover:text-primaryLight">
+									<span><p style="color:red;" align="center">Test DNA HPV</p></span>
+								</a>
+							</li></center>
+
 </footer>
