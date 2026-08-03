@@ -76,3 +76,23 @@ ALTER TABLE "User" ADD COLUMN mydr2id INTEGER;
 
 ALTER TABLE "User" ADD COLUMN "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE "User" ADD COLUMN "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
+
+-- Durable store for MyDr EDM OAuth tokens (one row per MyDr instance/department).
+-- MyDr rotates refresh_token on EVERY refresh and revokes the previous one immediately,
+-- so tokens cannot live in process memory — concurrent serverless instances would
+-- invalidate each other's access. Rows are seeded up front so that
+-- SELECT ... FOR UPDATE always has something to lock.
+CREATE TABLE "MyDrToken" (
+    "dep"            VARCHAR(16) NOT NULL,
+    "access_token"   VARCHAR(255),
+    "refresh_token"  VARCHAR(255),
+    "expires_at"     TIMESTAMPTZ,
+    "person_id"      INTEGER,
+    "otp_device_id"  INTEGER,
+    "updatedAt"      TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "MyDrToken_pkey" PRIMARY KEY ("dep")
+);
+
+-- '_' = MyDr1 (POZ), '51934' = MyDr2 (gynecology)
+INSERT INTO "MyDrToken"("dep") VALUES ('_'), ('51934') ON CONFLICT DO NOTHING;

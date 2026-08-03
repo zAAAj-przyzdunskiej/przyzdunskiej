@@ -1,8 +1,6 @@
-import { env } from '$env/dynamic/private';
-import { MYDR_URL, MYDR_CLIENT_ID, MYDR_CLIENT_SECRET, MYDR_USER, MYDR_PASSWORD, MYDR_CURTOKEN_BEARER, MYDR2_CURTOKEN_REFRESH} from '$env/static/private'
-import { MYDR2_CLIENT_ID, MYDR2_CLIENT_SECRET, MYDR2_USER, MYDR2_PASSWORD, MYDR2_CURTOKEN_BEARER} from '$env/static/private'
+import { MYDR_URL } from '$env/static/private'
 import { ResultCode, type Result, removeNulls, buildUrlQueryData, type Address, type User } from '$lib/utils';
-import { isEmpty } from 'validator';
+import { getAccessToken, hasCredentials, invalidateAccessToken } from '$lib/server/mydrAuth';
 import { boolean, date, number, z } from 'zod';
 
 export const officeDepartment:{[key:string]: string} = {
@@ -10,35 +8,33 @@ export const officeDepartment:{[key:string]: string} = {
     "59880": "51934", //Ginekolog
     "59881": "51934" //Ginekolog
 }
-export const depInitTokenReq:{[key:string]: object} = {
-    "_": {
-        grant_type: "password",
-        username: MYDR_USER,
-        password: MYDR_PASSWORD,
-        client_id: MYDR_CLIENT_ID,
-        client_secret: MYDR_CLIENT_SECRET
-    },
-    "51934": {
-        //Ginekolog:
-        grant_type: "password",
-        username: MYDR2_USER,
-        password: MYDR2_PASSWORD,
-        client_id: MYDR2_CLIENT_ID,
-        client_secret: MYDR2_CLIENT_SECRET
-    }
+
+/**
+ * Performs a request against the MyDr API, adding a fresh Authorization header.
+ * On 401/403 (token revoked early, or still awaiting 2FA confirmation) it clears the
+ * token and retries EXACTLY ONCE. Without this, a dead token silently looked like
+ * "no results" until the process restarted.
+ */
+export type ApiFetch = (url: string, init?: RequestInit) => Promise<Response>;
+
+function makeApiFetch(dep: string): ApiFetch {
+    return async (url: string, init: RequestInit = {}) => {
+        const res = await authorizedFetch(url, init, await getAccessToken(dep));
+        if(res.status != 401 && res.status != 403) {
+            return res;
+        }
+        console.warn("MyDr[" + dep + "]: HTTP " + res.status + " on " + url
+            + " - invalidating token and retrying once");
+        await invalidateAccessToken(dep);
+        return authorizedFetch(url, init, await getAccessToken(dep));
+    };
 }
-const depRefreshTokenReq:{[key:string]: object} = {
-    "_": {
-        grant_type: "refresh_token",
-        client_id: MYDR_CLIENT_ID,
-        client_secret: MYDR_CLIENT_SECRET
-    },
-    "51934": {
-        //Ginekolog:
-        grant_type: "refresh_token",
-        client_id: MYDR2_CLIENT_ID,
-        client_secret: MYDR2_CLIENT_SECRET
-    }
+
+function authorizedFetch(url: string, init: RequestInit, token: string): Promise<Response> {
+    return fetch(url, {
+        ...init,
+        headers: {...(init.headers as Record<string, string> | undefined), 'Authorization': "Bearer " + token}
+    });
 }
 
 export interface MyDrUser extends User {
@@ -109,15 +105,12 @@ export type Visit = {
 //     patient: z.string({required_error: "Patien"})
 // });
 export class MyDrGetter<T> {
-    static async newInstance<U>(apiPath:string, reqHeaders?: any, queryData?: object|null): Promise<MyDrGetter<U>> {
+    static async newInstance<U>(apiPath:string, apiFetch: ApiFetch, queryData?: object|null): Promise<MyDrGetter<U>> {
         const urlStr = MYDR_URL + apiPath + "?" + buildUrlQueryData(queryData);
         const reqInit: RequestInit = {
             method: "GET",
         }
-        if(reqHeaders) {
-            reqInit.headers = reqHeaders;
-        }
-        const instance = new MyDrGetter<U>(urlStr, reqInit);
+        const instance = new MyDrGetter<U>(urlStr, reqInit, apiFetch);
         return instance.load();
     }
 
@@ -130,19 +123,21 @@ export class MyDrGetter<T> {
     private _prev: MyDrGetter<T>|null;
     private _nextUrl?:string;
     cfgReq: RequestInit;
-    private constructor(urlStr: string, reqInit: RequestInit, prev?: MyDrGetter<T>) {
+    private apiFetch: ApiFetch;
+    private constructor(urlStr: string, reqInit: RequestInit, apiFetch: ApiFetch, prev?: MyDrGetter<T>) {
         this.urlStr = urlStr;
         this.cfgReq = reqInit;
+        this.apiFetch = apiFetch;
         this._prev = prev ? prev : null;
         this._next = null;
     }
     async load():Promise<MyDrGetter<T>> {
         console.log("Fetching " + this.urlStr);// + " with headers " + JSON.stringify(this.cfgReq));
-        let res = await fetch(this.urlStr, this.cfgReq);
+        let res = await this.apiFetch(this.urlStr, this.cfgReq);
         this.status = res.status;
         this.ok = res.status >= 200 && res.status < 300 ;
         if(!this.ok) {
-            console.log("Failed to fetching request " + this.urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            console.log("Failed to fetching request " + this.urlStr + ", HTTP status: " + res.status + ", " + (await res.text()))
             this.results = [];
             return this;
         }
@@ -169,7 +164,7 @@ export class MyDrGetter<T> {
             return null;
         }
         if(this._next) return this._next;
-        this._next = new MyDrGetter(this._nextUrl, this.cfgReq, this);
+        this._next = new MyDrGetter(this._nextUrl, this.cfgReq, this.apiFetch, this);
         this._next.index = this.index + 1;
         return await this._next.load();
     }
@@ -191,55 +186,38 @@ export class MyDrGetter<T> {
     }
 }
 export class MyDr {
+    /**
+     * The token is no longer fetched here — acquiring, refreshing and 2FA-confirming it is
+     * handled by mydrAuth.getAccessToken(), lazily and under a database row lock.
+     */
     static async newInstance(office?: string|null, department?: string|null): Promise<MyDr> {
         let dep = department
         if(!dep) {
             dep = office ? officeDepartment[office] : "_";
         }
-        if(!depInitTokenReq[dep]) {
+        if(!hasCredentials(dep)) {
             dep = "_";
         }
-        let token = globalThis.myDrToken.get(dep);
-        if(!token) {
-            token = await requestToken(depInitTokenReq[dep]);
-            globalThis.myDrToken.set(dep, token);
-            //env.MYDR2_CURTOKEN_REFRESH = token.refresh_token;
-        } else {
-            const current = Date.now();
-            console.log("Current time: " + current + ". token expire in: " + token.expires_in);
-            if(token.expires_in <= current) {
-                console.log("Refreshing token...")
-                //Use below to reuse token from env:
-                // let req = globalThis.myDrToken == null ? depRefreshTokenReq[department]
-                //             : {refresh_token: globalThis.myDrToken.get(department).refresh_token, ...depRefreshTokenReq[department]};
-                let req = {refresh_token: globalThis.myDrToken.get(dep).refresh_token, ...depRefreshTokenReq[dep]};
-                token = await requestToken(req);
-                globalThis.myDrToken.set(dep, token);
-            }
-        }
-        console.log("Token: " + token.access_token)
-        return new MyDr(token.access_token);
+        return new MyDr(dep);
     }
     requiredColumns: string[] = ["name", "surname", "pesel"];
-    token: string;
-    headers: any;
+    dep: string;
+    private apiFetch: ApiFetch;
     page_size = 100;
-    private constructor(token : string) {
-        this.token = token;
-        this.headers = {
-            'Authorization': "Bearer " + this.token
-        }
+    private constructor(dep : string) {
+        this.dep = dep;
+        this.apiFetch = makeApiFetch(dep);
     }
     async newPatientGetter(queryData: object): Promise<MyDrGetter<MyDrUser>> {
-        return MyDrGetter.newInstance<MyDrUser>("/patients", this.headers, queryData);
+        return MyDrGetter.newInstance<MyDrUser>("/patients", this.apiFetch, queryData);
     }
     async newDeclareGetter(patientPk: string, queryData?: object): Promise<MyDrGetter<Declaration>> {
         const apiPath = "/patients/" + patientPk + "/declarations/";
-        return MyDrGetter.newInstance<Declaration>(apiPath, this.headers, queryData);
+        return MyDrGetter.newInstance<Declaration>(apiPath, this.apiFetch, queryData);
     }
     async newVisitGetter(patientPk: string, queryData?: object): Promise<MyDrGetter<Visit>> {
         const apiPath = "/patients/" + patientPk + "/visits/";
-        return MyDrGetter.newInstance<Visit>(apiPath, this.headers, queryData);
+        return MyDrGetter.newInstance<Visit>(apiPath, this.apiFetch, queryData);
     }
 
     async getOneDeclaration(patient_pk: number): Promise<Declaration | null> {
@@ -261,13 +239,12 @@ export class MyDr {
     async getStaffByPk(id: string | number, role: ("doctors" | "nurses" | "receptionists") ): Promise<Staff|null> {
         const urlStr = MYDR_URL + "/" + role + "/" + id.toString();
         const reqInit: RequestInit = {
-            method: "GET",
-            headers: this.headers
+            method: "GET"
         }
-        let res = await fetch(urlStr, reqInit);
+        let res = await this.apiFetch(urlStr, reqInit);
         let ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
-            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text()))
             return null;
         }
         return (await res.json()) as Staff;
@@ -281,9 +258,9 @@ export class MyDr {
         console.log("Requesting " + urlStr);
         const reqInit: RequestInit = {
             method: "GET",
-            headers: {"Content-Type": "application/json", ...this.headers}
+            headers: {"Content-Type": "application/json"}
         }
-        let res = await fetch(urlStr, reqInit);
+        let res = await this.apiFetch(urlStr, reqInit);
         let ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
             console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text()))
@@ -373,16 +350,11 @@ export class MyDr {
 
         const urlStr = MYDR_URL + "/visits/free_slots/" + "?" + buildUrlQueryData(queryObj);
         const reqInit: RequestInit = {
-            method: "GET",
-            headers: this.headers
+            method: "GET"
         }
-        // let depListRes = await fetch(MYDR_URL + "/departments/", reqInit);
-        // let resText = await depListRes.text();
-        // console.log("Department List: " + resText);
-
 
         console.log("Requesting " + urlStr);
-        let res = await fetch(urlStr, reqInit);
+        let res = await this.apiFetch(urlStr, reqInit);
         const ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
             res.text().then((text) => {
@@ -413,10 +385,10 @@ export class MyDr {
         let url = MYDR_URL + "/visits/";
         let cfgReq = {
             method: "POST",
-            headers: {"Content-Type": "application/json", ...this.headers},
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(visit)
         };
-        let response = await fetch(url, cfgReq);
+        let response = await this.apiFetch(url, cfgReq);
         let ok = response.status >= 200 && response.status < 300
         if (!ok) {
             const resText = await response.text();
@@ -429,13 +401,12 @@ export class MyDr {
     async getAppointmentByPk(id: string): Promise<Visit|null> {
         const urlStr = MYDR_URL + "/visits/" + id.toString();
         const reqInit: RequestInit = {
-            method: "GET",
-            headers: this.headers
+            method: "GET"
         }
-        let res = await fetch(urlStr, reqInit);
+        let res = await this.apiFetch(urlStr, reqInit);
         let ok = res.status >= 200 && res.status < 300 ;
         if(!ok) {
-            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text))
+            console.log("Failed to fetching request " + urlStr + ", HTTP status: " + res.status + ", " + (await res.text()))
             return null;
         }
         return (await res.json()) as Visit;
@@ -444,10 +415,10 @@ export class MyDr {
         let url = MYDR_URL + "/visits/" + visit.id + "/";
         let cfgReq = {
             method: "PATCH",
-            headers: {"Content-Type": "application/json", ...this.headers},
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({patient: visit.patient, doctor: visit.doctor, office: visit.office, date: visit.date, state: "Anulowana"})
         };
-        let response = await fetch(url, cfgReq);
+        let response = await this.apiFetch(url, cfgReq);
         let ok = response.status >= 200 && response.status < 300
         if (!ok) {
             const resText = await response.text();
@@ -476,10 +447,10 @@ export class MyDr {
         delete data.id;
         let cfgReq = {
             method: "PATCH",
-            headers: {"Content-Type": "application/json", ...this.headers},
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(data)
         };
-        let response = await fetch(url, cfgReq);
+        let response = await this.apiFetch(url, cfgReq);
         if (response.status < 200 || response.status >= 300) {
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: await response.text()};
         }
@@ -526,10 +497,10 @@ export class MyDr {
         //console.log("Requesting MyDR User Create: " + reqBody)
         const cfgReq = {
             method: "POST",
-            headers: {"Content-Type": "application/json", ...this.headers},
+            headers: {"Content-Type": "application/json"},
             body: reqBody
         };
-        const response = await fetch(url, cfgReq);
+        const response = await this.apiFetch(url, cfgReq);
         if (response.status < 200 || response.status >= 300) {
             return {success: false, httpCode: ResultCode.BAD_REQUEST, message: await response.text()};
         }
@@ -575,54 +546,9 @@ export interface Patient {
     teryt?: number
 }
  */
-interface Token {
-    expires_in: number,
-    access_token: string,
-    token_type: string,
-    scope: string,
-    refresh_token: string
-}
-
-const tokenUrl = MYDR_URL + "/o/token/";
-
-//if(!globalThis.myDrToken.) {
-    //REFRESH TOKEN: Bearer: GeJdGcYINDWO6bYvxG3963Do2OwXMA, Refresh: WlVOtwD19NdT7L5qSVUqY1gXszS8C3
-    //{"access_token": "76D3aJkhbQolmoDjHMrCoLAVYeD9R4", "token_type": "Bearer", "expires_in": 36000, "refresh_token": "gxh3w2u5sDapmAYyYih5Vt6RlpfZjd", "scope": "external_api"}
-    // globalThis.myDrToken = {
-    //     access_token: "y6McEMa4CxUUdprdBJJML02AIShmxP", 
-    //     token_type: "Bearer", 
-    //     expires_in: Date.now() + 36000000, 
-    //     refresh_token: "BwQx07CQApYhGgdkhvakki4Zkhak5S", 
-    //     scope: "external_api"};
-//}
-
-async function requestToken(reqBody: object) {
-    let cfgReq = {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            'Accept': 'application/json'
-        },
-        body: buildUrlQueryData(reqBody)
-    }
-    let response = await fetch(tokenUrl, cfgReq);
-    if (response.status < 200 || response.status >= 300) {
-        throw new Error("Network response was not OK, http status " + response.status + ", message: " + (await response.text()));
-    }
-
-    let resToken = await response.json() as Token;
-    resToken.expires_in = Date.now() + resToken.expires_in * 1000;
-    console.log("Finish fetching token: " + tokenUrl + ". Token: " + resToken.access_token)
-    return resToken;
-}
-
-if(!globalThis.myDrToken) {
-    globalThis.myDrToken = new Map<string, Token>();
-}
-for(const dep in depInitTokenReq) {
-    const token = await requestToken(depInitTokenReq[dep]);
-    globalThis.myDrToken.set(dep, token);
-}
+// Acquiring, refreshing and 2FA-confirming tokens lives in $lib/server/mydrAuth.
+// This file used to run a module-level password grant at import time, without try/catch —
+// one failed login took down hooks.server.ts, and with it the whole application.
 
 //adimr52@gmail.com 98112402795
 //katarzyna.kuszx@gmail.com 48072843497

@@ -7,6 +7,7 @@ import {
 import { buildUrlQueryData, getDiff, randomNumber, type Address, type Result, type User, type UserLogin, type UserRegister, type VisitTime, compareVisit, dateToStr, formatTime, convertDbTimestampToDate } from '$lib/utils';
 import { ResultCode } from '$lib/utils';
 import { MyDr, type MyDrUser, type Staff } from './mydr';
+import { departments } from './mydrAuth';
 import { insert, select, update } from './db';
 
 export async function genToken(subject:string) {
@@ -272,7 +273,7 @@ export async function getVisits(user:User, page?: string|null, page_size?: strin
 	const nowDateStr = dateToStr(today);
 	try {
         const upcoming:VisitTime[] = [], past:VisitTime[] = [];
-		for(const dep of globalThis.myDrToken.keys()) {
+		for(const dep of departments()) {
 			const myDr = await MyDr.newInstance(null, dep);
 			const userId = (dep === "_") ? user.id?.toString() : user.mydr2id?.toString()
 			if(!userId) {

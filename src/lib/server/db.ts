@@ -27,6 +27,31 @@ async function getClient(): Promise<PoolClient> {
     return getPool().connect();
 }
 
+/**
+ * Runs a callback inside a single transaction on a single pooled client.
+ * Needed wherever several queries must be atomic, or where we use
+ * SELECT ... FOR UPDATE (a row lock that serializes concurrent instances).
+ * Unlike insert()/update(), errors are re-thrown — after ROLLBACK.
+ */
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>):Promise<T> {
+    const client = await getClient();
+    try {
+        await client.query('BEGIN');
+        const result = await fn(client);
+        await client.query('COMMIT');
+        return result;
+    } catch(err) {
+        try {
+            await client.query('ROLLBACK');
+        } catch(rollbackErr) {
+            console.error('Failed to roll back transaction', rollbackErr);
+        }
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
 export async function select(query: string, params: string[]):Promise<QResult> {
     const client = await getClient();
     let rows:any[] = [];

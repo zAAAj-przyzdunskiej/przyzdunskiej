@@ -1,6 +1,7 @@
 import { DEFAULT_VISIT_TYPE, DEFAULT_VISIT_TYPE2 } from '$env/static/private';
 import { PUBLIC_FAIL_MYDR, PUBLIC_NO_DECLARATION, PUBLIC_UA_DEACTIVATED, PUBLIC_UNAUTHORIZED } from '$env/static/public';
-import { MyDr, VisitKind, type Visit, officeDepartment, depInitTokenReq } from '$lib/server/mydr.js';
+import { MyDr, VisitKind, type Visit, officeDepartment } from '$lib/server/mydr.js';
+import { hasCredentials } from '$lib/server/mydrAuth.js';
 import { getDoctor, updateUser } from '$lib/server/user.js';
 import { ResultCode } from '$lib/utils.js';
 import { json } from '@sveltejs/kit';
@@ -34,7 +35,7 @@ export async function POST({ request, locals, cookies }) {
     const dep = officeDepartment[sOffice];
 
     //console.log("office = " + sOffice + ", Department = " + dep);
-    const isAnotherMyDr = (dep && depInitTokenReq[dep])
+    const isAnotherMyDr = (dep && hasCredentials(dep))
     visit.visit_type = isAnotherMyDr ? [parseInt(DEFAULT_VISIT_TYPE2.trim())] : [parseInt(DEFAULT_VISIT_TYPE.trim())];
     //visit.visit_type = [parseInt(DEFAULT_VISIT_TYPE.trim())];
     //visit.patient = user.id;
