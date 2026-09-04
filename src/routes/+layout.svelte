@@ -72,6 +72,9 @@
 </div>
 
 <footer >
+<p style="text-align: center;" textrwdproperties="{&quot;rwdMode_1&quot;:{&quot;fontSize&quot;:&quot;&quot;,&quot;lineHeight&quot;:&quot;&quot;,&quot;textAlign&quot;:&quot;center&quot;,&quot;letterSpacing&quot;:&quot;&quot;}}"><a data-linkdata="{&quot;type&quot;:&quot;webwave.link.CustomLinkData&quot;,&quot;target&quot;:&quot;blank&quot;,&quot;customLinkType&quot;:&quot;absoluteURL&quot;,&quot;href&quot;:&quot;http://aaaa&quot;,&quot;urlType&quot;:&quot;nofollow&quot;}">Informacja dotycząca wycieku danych elektroniczenj dokumentacji medycznej MyDR z 1 kwartału 2024 roku</a></p>
+<br>
+<br>
 	<svg xmlns="http://www.w3.org/2000/svg" class="-mb-0.5 w-full h" viewBox="0 0 1367.743 181.155">
 		<path class="fill-current text-gray-100 dark:text-gray-800" id="wave" data-name="wave" d="M0,0S166.91-56.211,405.877-49.5,715.838,14.48,955.869,26.854,1366,0,1366,0V115H0Z" transform="translate(1.743 66.155)"></path>
 	</svg>
