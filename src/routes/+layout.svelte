@@ -72,7 +72,7 @@
 </div>
 
 <footer >
-<p style="text-align: center;"><a href="http://aaaa">Informacja dotycząca wycieku danych elektronicznej dokumentacji medycznej MyDR z 1 kwartału 2024 roku</a></p>
+<p style="text-align: center;"><a href="/static/MyDR_wyciek.pdf" target="_blank">Informacja dotycząca wycieku danych elektronicznej dokumentacji medycznej MyDR z 1 kwartału 2024 roku</a></p>
 <br>
 <br>
 	<svg xmlns="http://www.w3.org/2000/svg" class="-mb-0.5 w-full h" viewBox="0 0 1367.743 181.155">
