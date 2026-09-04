@@ -72,9 +72,7 @@
 </div>
 
 <footer >
-<p style="text-align: center;"><a href="https://e74j81.webwave.dev/lib/e74j81/MyDR_wyciek-mtmscemo.pdf" target="_blank">Informacja dotycząca wycieku danych elektronicznej dokumentacji medycznej MyDR z 1 kwartału 2024 roku</a></p>
-<br>
-<br>
+
 	<svg xmlns="http://www.w3.org/2000/svg" class="-mb-0.5 w-full h" viewBox="0 0 1367.743 181.155">
 		<path class="fill-current text-gray-100 dark:text-gray-800" id="wave" data-name="wave" d="M0,0S166.91-56.211,405.877-49.5,715.838,14.48,955.869,26.854,1366,0,1366,0V115H0Z" transform="translate(1.743 66.155)"></path>
 	</svg>
@@ -98,6 +96,7 @@
 					</span>
 				</div>
 			</div>
+<br><br><p style="text-align: center;"><a href="https://e74j81.webwave.dev/lib/e74j81/MyDR_wyciek-mtmscemo.pdf" target="_blank">Informacja dotycząca wycieku danych elektronicznej dokumentacji medycznej MyDR z 1 kwartału 2024 roku</a></p>
 		</div>
 	</div>
 
