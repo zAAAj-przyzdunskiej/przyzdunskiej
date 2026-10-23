@@ -88,8 +88,8 @@
 				</div>
 				<div class="col-span-5 text-xs text-gray-500 dark:text-gray-200 text-right border-none md:col-span-6 lg:col-span-7">
 					<span>
-						NIEPUBLICZNY ZAKŁAD OPIEKI ZDROWOTNEJ PRZYCHODNIA PRZY ZDUŃSKIEJ <br>
-						K.LEWANDOWSKA K.WRZESIŃSKA-KRYSZAK SPÓŁKA JAWNA <br>
+						PRZYCHODNIA PRZY ZDUŃSKIEJ sp zoo<br>
+						
 						NIP8883163169 KRS0001050898 <br>
 						UL. ZDUŃSKA 6/12/3, 87-800 WŁOCŁAWEK <br>
 						<i>Podmiot Leczniczy numer rejestrowy W04-000000269276</i>
